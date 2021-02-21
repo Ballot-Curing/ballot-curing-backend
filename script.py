@@ -1,3 +1,4 @@
+from selenium.webdriver import ChromeOptions
 from selenium.webdriver import Chrome
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
@@ -5,8 +6,8 @@ from selenium.webdriver.support.select import Select
 # TODO: download periodically with updated data
 
 # input election year and name
-year = input('Election year: ')
-name = input('Election name: ')
+# year = input('Election year: ')
+# name = input('Election name: ')
 
 # sample name and value
 sample_year = '2016'
@@ -15,7 +16,9 @@ year = sample_year
 name = sample_name
 
 # start selenium webdriver
-browser = Chrome()
+op = ChromeOptions()
+op.add_argument('--headless')
+browser = Chrome(options=op)
 browser.get(('https://elections.sos.ga.gov/Elections/voterabsenteefile.do'))
 
 # select year
