@@ -1,17 +1,19 @@
-from selenium.webdriver import ChromeOptions
 from selenium.webdriver import Chrome
+from selenium.webdriver import ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
 
-# TODO: download periodically with updated data
+
 
 # input election year and name
-# year = input('Election year: ')
-# name = input('Election name: ')
+# TODO These should probably be in a config
+# file per state so they don't have to be input every time
+year = input('Election year: ')
+name = input('Election name: ')
 
 # sample name and value
-sample_year = '2016'
-sample_name = '12/13/2016 - DECEMBER 13, 2016 SPECIAL ELECTION'
+sample_year = '2021'
+sample_name = '01/05/2021 - JANUARY 5, 2021 FEDERAL RUNOFF ELECTION'
 year = sample_year
 name = sample_name
 
