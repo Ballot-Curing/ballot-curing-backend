@@ -91,7 +91,6 @@ os.remove(new_file_path) # delete zip file
 # TODO rm all non-STATEWIDE.csv files
 print(f'Files located at: {new_file_dir}')
 
-database setup
 mydb = MySQLdb.connect(host=config['DATABASE']['host'],
     user=config['DATABASE']['user'],
     passwd=config['DATABASE']['passwd'],
