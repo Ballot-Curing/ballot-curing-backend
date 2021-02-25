@@ -1,21 +1,18 @@
+import os
+import shutil
+import configparser
+import time
+
 from selenium.webdriver import Chrome
 from selenium.webdriver import ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
 
+config = configparser.ConfigParser()
+config.read('config.ini')
 
-
-# input election year and name
-# TODO These should probably be in a config
-# file per state so they don't have to be input every time
-year = input('Election year: ')
-name = input('Election name: ')
-
-# sample name and value
-sample_year = '2021'
-sample_name = '01/05/2021 - JANUARY 5, 2021 FEDERAL RUNOFF ELECTION'
-year = sample_year
-name = sample_name
+year = config.get('GA', 'Year')
+name = config.get('GA', 'Name')
 
 # start selenium webdriver
 op = ChromeOptions()
@@ -47,3 +44,28 @@ WebDriverWait(browser, 10)
 url = 'javascript:downLoadFile();'
 download = browser.find_element_by_xpath('//a[@href="'+url+'"]')
 download.click()
+
+# download filename can either be set in config
+# or programmed in script
+filename = config.get('GA', 'Filename')
+
+download_path = config['SYSTEM']['download_dir']
+
+file_path = os.path.join(download_path, filename)
+timeout = config.getint('GA', 'Timeout')
+count = 0
+
+while not os.path.exists(file_path):
+    time.sleep(1)
+    count += 1
+    if count > timeout:
+      print('Timeout on downloading file. Exiting program.')
+      break
+
+if not os.path.isfile(file_path):
+  raise ValueError("%s isn't a file!" % file_path)
+
+storage_path = config.get('GA', 'storage_dir')
+new_file_path = os.path.join(storage_path, filename)
+
+shutil.move(file_path, new_file_path)
