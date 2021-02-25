@@ -144,7 +144,7 @@ IGNORE 1 ROWS (county, voter_reg_num, last_name, first_name, middle_name, @dummy
                @dummy, @dummy, @dummy, ballot_rtn_status, ballot_issue, @req_dt, @send_dt,
                @ret_dt, ballot_style, @dummy, @dummy, @dummy, @dummy, precinct, cong_dist, 
                st_senate, st_house, @dummy, @dummy, @dummy, @dummy, @dummy, party_code)
-               SET proc_date=NOW(),
+               SET proc_date = NOW(),
                    street_address = CONCAT(@street_no, ' ', @street_name, ' ', @apt_no),
                    ballot_req_dt = STR_TO_DATE(@req_dt, '%m/%d/%Y'),
                    ballot_send_dt = STR_TO_DATE(@send_dt, '%m/%d/%Y'),
