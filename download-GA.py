@@ -84,7 +84,8 @@ if not os.path.exists(new_file_dir):
   os.mkdir(new_file_dir)
 
 with zipfile.ZipFile(new_file_path, 'r') as zip_ref:
-    zip_ref.extractall(new_file_dir)
+  print(f'Unzipping file: {filename}.')
+  zip_ref.extractall(new_file_dir)
 
 os.remove(new_file_path) # delete zip file
 

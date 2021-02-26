@@ -68,6 +68,7 @@ for entry in os.scandir(ga_dir):
   
   try:
     with zipfile.ZipFile(entry.path, 'r') as zip_ref:
+      print(f'Unzipping file: {entry.name}.')
       zip_ref.extractall(new_file_dir)
   except:
     print(f'Error for {entry.name}: ', sys.exc_info()[0])
@@ -93,7 +94,7 @@ for entry in os.scandir(ga_dir):
                     ballot_ret_dt = STR_TO_DATE(@ret_dt, '%m/%d/%Y');
   '''
 
-  print(f'Database query started for {date}.')
+  print(f'Database insertion started for {date}.')
   cursor.execute(query)
   mydb.commit()
 
