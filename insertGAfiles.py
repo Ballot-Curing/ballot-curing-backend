@@ -25,6 +25,7 @@ cursor = mydb.cursor()
 
 query = f'''
 CREATE TABLE IF NOT EXISTS {config['GA']['table']} (
+  id                      INT NOT NULL AUTO_INCREMENT, 
   proc_date               DATETIME,
   county                  VARCHAR(25),
   voter_reg_num           INT,
@@ -50,7 +51,8 @@ CREATE TABLE IF NOT EXISTS {config['GA']['table']} (
   ballot_send_dt         	DATETIME,
   ballot_ret_dt	          DATETIME,
   ballot_issue            VARCHAR(255),
-  ballot_rtn_status       VARCHAR(50)
+  ballot_rtn_status       VARCHAR(50),
+  PRIMARY KEY(id)
 );
 '''
 cursor.execute(query)
@@ -62,8 +64,8 @@ for entry in os.scandir(ga_dir):
     continue 
   date = entry.name[:10]
 
-  new_file_dir = os.path.join(ga_dir, date)
-
+  new_file_dir = os.path.join(config['GA']['rain_ga_storage'], date)
+  
   try:
     with zipfile.ZipFile(entry.path, 'r') as zip_ref:
       zip_ref.extractall(new_file_dir)
@@ -76,6 +78,7 @@ for entry in os.scandir(ga_dir):
   query =f'''
   LOAD DATA LOCAL INFILE '{csv_file}'
   INTO TABLE {config['GA']['table']}
+  CHARACTER SET latin1
   FIELDS TERMINATED BY ','
   LINES TERMINATED BY '\n'
   IGNORE 1 ROWS (county, voter_reg_num, last_name, first_name, middle_name, @dummy, @street_no,
