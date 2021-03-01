@@ -64,11 +64,11 @@ CREATE TABLE IF NOT EXISTS {config['NC']['table']} (
 '''
 
 cursor.execute(query)
-csv_file = os.path.join('./', config['GA']['csv_name'])
+csv_file = os.path.join('./', config['NC']['csv_name'])
 
 query =f'''
 LOAD DATA LOCAL INFILE '{csv_file}'
-INTO TABLE {config['GA']['table']}
+INTO TABLE {config['NC']['table']}
 FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS (county, voter_reg_num, last_name, first_name, middle_name, race, ethnicity,
