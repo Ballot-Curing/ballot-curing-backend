@@ -2,10 +2,13 @@ import requests
 import zipfile
 import os
 import configparser
-#import MySQLdb
+import MySQLdb
+import time
+
+from datetime import date
 
 config = configparser.ConfigParser()
-config.read('config-sample.ini')
+config.read('config.ini')
 
 # url of zip and target zip name
 url = config['NC']['url']
@@ -14,11 +17,17 @@ target_file = config['NC']['zip_filename']
 # get file and write it to output 
 myfile = requests.get(url)
 open(target_file, 'wb').write(myfile.content)
-
+'''
+storage_path = config['NC']['storage_dir']
+today = date.today().strftime('%Y-%m-%d')
+new_file_dir = os.path.join(storage_path, today)
+if not os.path.exists(new_file_dir):
+  os.mkdir(new_file_dir)
+'''
 # unzips file
 with zipfile.ZipFile(target_file, 'r') as zip_ref:
   print('Unzipping file: ' + target_file)
-  zip_ref.extractall()
+  zip_ref.extractall('./test_NC_data/')
 
 # deletes the old zip file
 print('Deleting old zip file')
@@ -64,14 +73,15 @@ CREATE TABLE IF NOT EXISTS {config['NC']['table']} (
 '''
 
 cursor.execute(query)
-csv_file = os.path.join('./', config['NC']['csv_name'])
+csv_file = os.path.join('./test_NC_data/', config['NC']['csv_name'])
 
 query =f'''
 LOAD DATA LOCAL INFILE '{csv_file}'
 INTO TABLE {config['NC']['table']}
+CHARACTER SET latin1
 FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\n'
-IGNORE 1 ROWS (county, voter_reg_num, last_name, first_name, middle_name, race, ethnicity,
+IGNORE 1 ROWS (county, voter_reg_num, @ignore, last_name, first_name, middle_name, race, ethnicity,
             gender, age, street_address, city, state, zip, @dummy, @dummy, @dummy, @dummy,
                @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, election_dt, 
 			   party_code, precinct, cong_dist, st_house, st_senate, @dummy, @dummy, @dummy,
