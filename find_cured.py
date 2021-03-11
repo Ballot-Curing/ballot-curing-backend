@@ -6,7 +6,7 @@ import queries
 from datetime import datetime, timedelta
 
 config = configparser.ConfigParser()
-config.read('config-sample.ini')
+config.read('config.ini')
 rejected_db = "rejected"
 cured_db = "cured"
 table = config['GA']['table']
@@ -77,5 +77,5 @@ if __name__ == "__main__":
   start_datetime = datetime.strptime(start_date, '%m/%d/%y')
   for i in range(1):
     start_datetime += timedelta(days=1)
-    print("Start date: " + start_datetime)
+    print("Start date: " + str(start_datetime))
     mysqlconnect(start_datetime)
