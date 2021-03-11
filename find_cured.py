@@ -3,9 +3,7 @@ import MySQLdb
 import configparser
 import queries
 
-from datetime import datetime
-
-today = "10/20/20"
+from datetime import datetime, timedelta
 
 config = configparser.ConfigParser()
 config.read('config-sample.ini')
@@ -15,9 +13,7 @@ table = "nc_test"
 
 # table = config['GA']['table']
 
-def mysqlconnect(today): 
-	today_datetime = datetime.strptime(today, '%m/%d/%y')
-  
+def mysqlconnect(today_datetime): 
 	# To connect MySQL database 
 	mydb = MySQLdb.connect( 
 			host='localhost', 
@@ -46,7 +42,7 @@ def mysqlconnect(today):
 	# for each rejected entry, query for today to see if they were accepted
 	output = cursor.fetchall()
 	for entry in output:
-		cursor.execute(queries.query_for_accepted(table, today, entry))
+		cursor.execute(queries.query_for_accepted(table, today_datetime, entry))
 		accepted = cursor.fetchall()
   
 		# if accepted, add to cured and remove from rejected
@@ -61,7 +57,7 @@ def mysqlconnect(today):
    
 
   # query the current day for any new rejected
-	cursor.execute(queries.get_today_rejected(table, today))
+	cursor.execute(queries.get_today_rejected(table, today_datetime))
 	output = cursor.fetchall()
  
 	# for each rejected entry today, add to rejected table
@@ -78,4 +74,9 @@ def mysqlconnect(today):
 
 # Driver Code 
 if __name__ == "__main__" : 
-	mysqlconnect(today)
+	start_date = "10/19/20"
+	start_datetime = datetime.strptime(start_date, '%m/%d/%y')
+	for i in range(10):
+		start_datetime += timedelta(days=1)
+		print(start_datetime)
+		mysqlconnect(start_datetime)
