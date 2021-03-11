@@ -60,7 +60,7 @@ def mysqlconnect(today_datetime):
 
   # for each rejected entry today, add to rejected table
   for entry in output:
-    print("Found rejected entry: " + entry["voter_reg_num"])
+    print("Found rejected entry: " + str(entry["voter_reg_num"]))
 
     cursor.execute(queries.add_to_rejected(
         rejected_db, entry, today_datetime))
