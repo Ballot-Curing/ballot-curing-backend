@@ -1,10 +1,10 @@
 
-def query_for_accepted(table, today, entry):
+def query_for_accepted(table, today_datetime, entry):
 	return f'''
 			SELECT voter_reg_num, voter_zip, county_desc, ballot_rtn_dt
 			FROM {table}
 			WHERE ballot_rtn_status = "ACCEPTED"
-			AND ballot_rtn_dt = "{today}"
+			AND ballot_rtn_dt = "{today_datetime}"
 			AND voter_reg_num = "{entry["voter_reg_num"]}";
 			'''
 
@@ -50,12 +50,12 @@ def create_rejected_table(rejected_db):
 		);
 		'''
 
-def get_today_rejected(table, today): 
+def get_today_rejected(table, today_datetime): 
   return f'''
 		SELECT DISTINCT(voter_reg_num), voter_zip as zip, county_desc as county, election_dt, ballot_rtn_dt
 		FROM {table}
 		WHERE ballot_rtn_status = "REJECTED"
-		AND ballot_rtn_dt = "{today}";
+		AND ballot_rtn_dt = "{today_datetime}";
 		'''
 
 def get_all_rejected(rejected_db):
