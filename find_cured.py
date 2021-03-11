@@ -9,29 +9,28 @@ config = configparser.ConfigParser()
 config.read('config-sample.ini')
 rejected_db = "rejected"
 cured_db = "cured"
-table = "nc_test"
+#table = "nc_test"
 
-# table = config['GA']['table']
+table = config['GA']['table']
 
 def mysqlconnect(today_datetime): 
 	# To connect MySQL database 
-	mydb = MySQLdb.connect( 
-			host='localhost', 
-			user='test1',  
-			passwd = 'password', 
-			db='georgia_test', 
-			)
+	#mydb = MySQLdb.connect( 
+	#		host='localhost', 
+	#		user='test1',  
+	#		passwd = 'password', 
+	#		db='georgia_test', 
+	#		)
+        mydb = MySQLdb.connect(host=config['DATABASE']['host'],
+                         user=config['DATABASE']['user'],
+                         passwd=config['DATABASE']['passwd'],
+                         db=config['GA']['db'],
+                         local_infile = 1)
 
-	# mydb = MySQLdb.connect(host=config['DATABASE']['host'],
-  #                       user=config['DATABASE']['user'],
-  #                       passwd=config['DATABASE']['passwd'],
-  #                       db=config['GA']['db'],
-  #                       local_infile = 1)
-  
-	cursor = mydb.cursor(MySQLdb.cursors.DictCursor) 
- 
+        cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
+
 	# make cured table if not made
-	cursor.execute(queries.create_cured_table(cured_db)) 
+        cursor.execute(queries.create_cured_table(cured_db)) 
 
 	# make rejected table if not made
 	cursor.execute(queries.create_rejected_table(rejected_db))
@@ -74,7 +73,7 @@ def mysqlconnect(today_datetime):
 
 # Driver Code 
 if __name__ == "__main__" : 
-	start_date = "10/19/20"
+	start_date = "11/21/20"
 	start_datetime = datetime.strptime(start_date, '%m/%d/%y')
 	for i in range(10):
 		start_datetime += timedelta(days=1)
