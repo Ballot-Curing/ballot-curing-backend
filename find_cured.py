@@ -35,7 +35,6 @@ def mysqlconnect(today_datetime):
   # for each rejected entry, query for today to see if they were accepted
   output = cursor.fetchall()
   for entry in output:
-    print("Found rejected entry: " + str(entry["voter_reg_num"]))
     cursor.execute(queries.query_for_accepted(
         table, today_datetime, entry))
     accepted = cursor.fetchall()
