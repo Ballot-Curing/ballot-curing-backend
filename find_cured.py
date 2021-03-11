@@ -54,7 +54,7 @@ def mysqlconnect(today_datetime):
       mydb.commit()
 
   # query the current day for any new rejected
-  print("Added to cured table")
+  print("Getting today's rejected ballots from main table")
   cursor.execute(queries.get_today_rejected(table, today_datetime))
   output = cursor.fetchall()
 

@@ -3,7 +3,7 @@ def query_for_accepted(table, today_datetime, entry):
     return f'''
 			SELECT voter_reg_num, zip, county, ballot_ret_dt
 			FROM {table}
-			WHERE ballot_rtn_status = "ACCEPTED"
+			WHERE ballot_rtn_status = "A"
 			AND ballot_ret_dt = "{today_datetime}"
 			AND voter_reg_num = "{entry["voter_reg_num"]}";
 			'''
@@ -60,7 +60,7 @@ def get_today_rejected(table, today_datetime):
     return f'''
 		SELECT DISTINCT(voter_reg_num), zip, county, election_dt, ballot_ret_dt
 		FROM {table}
-		WHERE ballot_rtn_status = "REJECTED"
+		WHERE ballot_rtn_status = "R"
 		AND ballot_ret_dt = "{today_datetime}";
 		'''
 
