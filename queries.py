@@ -12,7 +12,7 @@ def query_for_accepted(table, today_datetime, entry):
 def add_to_cured(cured_db, entry, today_datetime):
     return f'''
 			INSERT IGNORE INTO {cured_db}(voter_reg_num, zip, county, election_dt, rejection_dt, cured_dt)
-			VALUES({entry["voter_reg_num"]}, {entry["zip"]}, {entry["county"]}, "{entry["election_dt"]}", "{entry["rejection_dt"]}", "{today_datetime}");
+			VALUES({entry["voter_reg_num"]}, {entry["zip"]}, "{entry["county"]}", "{entry["election_dt"]}", "{entry["rejection_dt"]}", "{today_datetime}");
 			'''
 
 
@@ -27,7 +27,7 @@ def remove_from_rejected(rejected_db, entry):
 def add_to_rejected(rejected_db, entry, today_datetime):
     return f'''
 			INSERT IGNORE INTO {rejected_db}(voter_reg_num, zip, county, election_dt, rejection_dt)
-			VALUES({entry["voter_reg_num"]}, {entry["zip"]}, {entry["county"]}, "{entry["election_dt"]}", "{today_datetime}");
+			VALUES({entry["voter_reg_num"]}, {entry["zip"]}, "{entry["county"]}", "{entry["election_dt"]}", "{today_datetime}");
 			'''
 
 
