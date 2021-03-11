@@ -58,7 +58,7 @@ def create_rejected_table(rejected_db):
 
 def get_today_rejected(table, today_datetime):
     return f'''
-		SELECT DISTINCT(voter_reg_num), voter_zip as zip, county_desc as county, election_dt, ballot_rtn_dt
+		SELECT DISTINCT(voter_reg_num), zip, county, election_dt, ballot_rtn_dt
 		FROM {table}
 		WHERE ballot_rtn_status = "REJECTED"
 		AND ballot_rtn_dt = "{today_datetime}";
