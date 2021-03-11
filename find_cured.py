@@ -72,9 +72,9 @@ def mysqlconnect(today_datetime):
 
 # Driver Code
 if __name__ == "__main__":
-  start_date = "11/20/20"
+  start_date = "12/14/20"
   start_datetime = datetime.strptime(start_date, '%m/%d/%y')
-  for i in range(1):
+  for i in range(27):
     start_datetime += timedelta(days=1)
     print("Start date: " + str(start_datetime))
     mysqlconnect(start_datetime)
