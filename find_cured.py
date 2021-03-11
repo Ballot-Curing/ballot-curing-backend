@@ -13,69 +13,72 @@ cured_db = "cured"
 
 table = config['GA']['table']
 
-def mysqlconnect(today_datetime): 
-	# To connect MySQL database 
-	#mydb = MySQLdb.connect( 
-	#		host='localhost', 
-	#		user='test1',  
-	#		passwd = 'password', 
-	#		db='georgia_test', 
-	#		)
-        mydb = MySQLdb.connect(host=config['DATABASE']['host'],
-                         user=config['DATABASE']['user'],
-                         passwd=config['DATABASE']['passwd'],
-                         db=config['GA']['db'],
-                         local_infile = 1)
 
-        cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
+def mysqlconnect(today_datetime):
+    # To connect MySQL database
+    # mydb = MySQLdb.connect(
+    #		host='localhost',
+    #		user='test1',
+    #		passwd = 'password',
+    #		db='georgia_test',
+    #		)
+    mydb = MySQLdb.connect(host=config['DATABASE']['host'],
+                           user=config['DATABASE']['user'],
+                           passwd=config['DATABASE']['passwd'],
+                           db=config['GA']['db'],
+                           local_infile=1)
 
-	# make cured table if not made
-        cursor.execute(queries.create_cured_table(cured_db)) 
+    cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
-	# make rejected table if not made
-	cursor.execute(queries.create_rejected_table(rejected_db))
- 
-	# get rejected ballots from total rejected
-	cursor.execute(queries.get_all_rejected(rejected_db))
-	
-	# for each rejected entry, query for today to see if they were accepted
-	output = cursor.fetchall()
-	for entry in output:
-		cursor.execute(queries.query_for_accepted(table, today_datetime, entry))
-		accepted = cursor.fetchall()
-  
-		# if accepted, add to cured and remove from rejected
-		if len(accepted) > 0:
-			print("Entry was accepted today: " + str(entry["voter_reg_num"]))
+    # make cured table if not made
+    cursor.execute(queries.create_cured_table(cured_db))
 
-			cursor.execute(queries.add_to_cured(cured_db, entry, today_datetime))
-			mydb.commit()
+    # make rejected table if not made
+    cursor.execute(queries.create_rejected_table(rejected_db))
 
-			cursor.execute(queries.remove_from_rejected(rejected_db, entry))
-			mydb.commit()
-   
+    # get rejected ballots from total rejected
+    cursor.execute(queries.get_all_rejected(rejected_db))
+
+    # for each rejected entry, query for today to see if they were accepted
+    output = cursor.fetchall()
+    for entry in output:
+        cursor.execute(queries.query_for_accepted(
+            table, today_datetime, entry))
+        accepted = cursor.fetchall()
+
+        # if accepted, add to cured and remove from rejected
+        if len(accepted) > 0:
+            print("Entry was accepted today: " + str(entry["voter_reg_num"]))
+
+            cursor.execute(queries.add_to_cured(
+                cured_db, entry, today_datetime))
+            mydb.commit()
+
+            cursor.execute(queries.remove_from_rejected(rejected_db, entry))
+            mydb.commit()
 
   # query the current day for any new rejected
-	cursor.execute(queries.get_today_rejected(table, today_datetime))
-	output = cursor.fetchall()
- 
-	# for each rejected entry today, add to rejected table
-	for entry in output:
-		print("Found rejected entry: " + entry["voter_reg_num"])
-		
-		cursor.execute(queries.add_to_rejected(rejected_db, entry, today_datetime))
-		print("Added to rejected table")
-		mydb.commit()
-   
-	# To close the connection 
-	mydb.close() 
+    cursor.execute(queries.get_today_rejected(table, today_datetime))
+    output = cursor.fetchall()
+
+    # for each rejected entry today, add to rejected table
+    for entry in output:
+        print("Found rejected entry: " + entry["voter_reg_num"])
+
+        cursor.execute(queries.add_to_rejected(
+            rejected_db, entry, today_datetime))
+        print("Added to rejected table")
+        mydb.commit()
+
+    # To close the connection
+    mydb.close()
 
 
-# Driver Code 
-if __name__ == "__main__" : 
-	start_date = "11/21/20"
-	start_datetime = datetime.strptime(start_date, '%m/%d/%y')
-	for i in range(10):
-		start_datetime += timedelta(days=1)
-		print(start_datetime)
-		mysqlconnect(start_datetime)
+# Driver Code
+if __name__ == "__main__":
+    start_date = "11/21/20"
+    start_datetime = datetime.strptime(start_date, '%m/%d/%y')
+    for i in range(10):
+        start_datetime += timedelta(days=1)
+        print(start_datetime)
+        mysqlconnect(start_datetime)
