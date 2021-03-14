@@ -34,7 +34,7 @@ def add_to_rejected(rejected_db, entry, today_datetime):
 def create_cured_table(cured_db):
     return f'''
 		CREATE TABLE IF NOT EXISTS {cured_db} (
-			voter_reg_num           INT,
+			voter_reg_num           INT NOT NULL PRIMARY KEY,
 			zip                     VARCHAR(10),
 			county									VARCHAR(25),
 			election_dt             DATETIME,
