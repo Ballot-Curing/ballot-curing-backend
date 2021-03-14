@@ -80,36 +80,18 @@ LOAD DATA LOCAL INFILE '{csv_file}'
 INTO TABLE {config['NC']['table']}
 CHARACTER SET latin1
 FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
-IGNORE 1 ROWS (@county_st, @voter_reg_num_st, @ignore, @last_name_st, @first_name_st, @middle_name_st, @race_st, 
-                @ethnicity_st, @gender_st, @age_st, @street_address_st, @city_st, @state_st, @zip_st, @dummy, @dummy, @dummy,
+IGNORE 1 LINES (county, voter_reg_num, @ignore, last_name, first_name, middle_name, race, 
+                ethnicity, gender, age, street_address, city, state, zip, @dummy, @dummy, @dummy,
                 @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @elec_date, 
-			   @party_code_st, @precinct_st, @cong_dist_st, @st_house_st, @st_senate_st, @dummy, @dummy, @dummy,
-			   @req_dt, @send_dt, @ret_dt, @ballot_rtn_status_st, @dummy, @dummy, @dummy)
+			   party_code, precinct, cong_dist, st_house, st_senate, @dummy, ballot_style, @dummy,
+			   @req_dt, @send_dt, @ret_dt, ballot_rtn_status, @dummy, @dummy, @dummy)
                SET proc_date = NOW(),
-                   county = TRIM(BOTH '"' FROM @county_st),
-                   voter_reg_num = TRIM(BOTH '"' FROM @county_reg_num_st),
-                   last_name = TRIM(BOTH '"' FROM @last_name_st),
-                   first_name = TRIM(BOTH '"' FROM @first_name_st),
-                   middle_name = TRIM(BOTH '"' FROM @middle_name_st),
-                   race = TRIM(BOTH '"' FROM @race_st),
-                   ethnicity = TRIM(BOTH '"' FROM @ethnicity_st),
-                   gender = TRIM(BOTH '"' FROM @gender),
-                   age = TRIM(BOTH '"' FROM @age_st),
-                   street_address = TRIM(BOTH '"' FROM @street_address_st),
-                   city = TRIM(BOTH '"' FROM @city_st),
-                   state = TRIM(BOTH '"' FROM @state_st),
-                   zip = TRIM(BOTH '"' FROM @zip_st),
-                   party_code = TRIM(BOTH '"' FROM @party_code_st),
-                   precinct = TRIM(BOTH '"' FROM @precinct_st),
-                   cong_dist = TRIM(BOTH '"' FROM @cong_dist_st),
-                   st_house = TRIM(BOTH '"' FROM @st_house_st),
-                   st_senate = TRIM(BOTH '"' FROM @st_senate_st),
-                   ballot_rtn_status = TRIM(BOTH '"' FROM @ballot_rtn_status_st),
-                   election_dt = STR_TO_DATE(@elec_date, '"%m/%d/%Y"'),
-                   ballot_req_dt = STR_TO_DATE(@req_dt, '"%m/%d/%Y"'),
-                   ballot_send_dt = STR_TO_DATE(@send_dt, '"%m/%d/%Y"'),
-                   ballot_ret_dt = STR_TO_DATE(@ret_dt, '"%m/%d/%Y"');
+                   election_dt = STR_TO_DATE(@elec_date, '%m/%d/%Y'),
+                   ballot_req_dt = STR_TO_DATE(@req_dt, '%m/%d/%Y'),
+                   ballot_send_dt = STR_TO_DATE(@send_dt, '%m/%d/%Y'),
+                   ballot_ret_dt = STR_TO_DATE(@ret_dt, '%m/%d/%Y');
 '''
 
 print('Database query started.')
