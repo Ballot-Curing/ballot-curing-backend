@@ -63,16 +63,16 @@ def mysqlconnect(today_datetime):
           cured_db, entry, today_datetime))
     mydb.commit()
 
-  # # query the current day for any new rejected
-  # print("Getting today's rejected ballots from main table")
-  # cursor.execute(queries.get_today_rejected(table, today_datetime, cured_db))
-  # output = cursor.fetchall()
+  # query the current day for any new rejected
+  print("Getting today's rejected ballots from main table")
+  cursor.execute(queries.get_today_rejected(table, today_datetime, cured_db))
+  output = cursor.fetchall()
 
-  # # for each rejected entry today, add to rejected table
-  # for entry in output:
-  #   cursor.execute(queries.add_to_rejected(
-  #       rejected_db, entry, today_datetime))
-  #   mydb.commit()
+  # for each rejected entry today, add to rejected table
+  for entry in output:
+    cursor.execute(queries.add_to_rejected(
+        rejected_db, entry, today_datetime))
+    mydb.commit()
 
   # To close the connection
   mydb.close()

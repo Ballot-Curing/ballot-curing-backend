@@ -59,14 +59,15 @@ def create_rejected_table(rejected_db):
 
 def get_today_rejected(table, today_datetime, cured_db):
     return f'''
-		SELECT DISTINCT(voter_reg_num), zip, county, election_dt, ballot_ret_dt
+    SELECT DISTINCT(today.voter_reg_num), today.zip, today.county, today.election_dt, ballot_ret_dt
     FROM {table} as today
     LEFT JOIN {cured_db} as cured
     ON today.voter_reg_num = cured.voter_reg_num
     WHERE 
-    cured.voter_reg_num IS NULL
-    today.ballot_rtn_status = "R"
+    cured.voter_reg_num IS NULL 
+    AND today.ballot_rtn_status = "R"
     AND ballot_ret_dt = "{today_datetime}";
+
 		'''
 
 
