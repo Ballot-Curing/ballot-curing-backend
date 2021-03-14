@@ -1,3 +1,15 @@
+def add_to_cured(cured_db, entry, today_datetime):
+    return f'''
+			INSERT IGNORE INTO {cured_db}(voter_reg_num, zip, county, election_dt, rejection_dt, cured_dt, ballot_issue)
+			VALUES({entry["voter_reg_num"]}, {entry["zip"]}, "{entry["county"]}", "{entry["election_dt"]}", "{entry["rejection_dt"]}", "{entry["cured_dt"]}", "{entry["ballot_issue"]}");
+			'''
+
+def add_to_rejected(rejected_db, entry, today_datetime):
+    return f'''
+			INSERT IGNORE INTO {rejected_db}(voter_reg_num, zip, county, election_dt, rejection_dt)
+			VALUES({entry["voter_reg_num"]}, {entry["zip"]}, "{entry["county"]}", "{entry["election_dt"]}", "{today_datetime}");
+			'''
+
 def create_cured_table(cured_db):
     return f'''
 		CREATE TABLE IF NOT EXISTS {cured_db} (
@@ -22,12 +34,6 @@ def create_rejected_table(rejected_db):
 		);
 		'''
 
-
-def add_to_rejected(rejected_db, entry, today_datetime):
-    return f'''
-			INSERT IGNORE INTO {rejected_db}(voter_reg_num, zip, county, election_dt, rejection_dt)
-			VALUES({entry["voter_reg_num"]}, {entry["zip"]}, "{entry["county"]}", "{entry["election_dt"]}", "{today_datetime}");
-			'''
 
 def get_today_rejected(table, today_datetime, cured_db):
     return f'''
