@@ -57,6 +57,14 @@ CREATE TABLE IF NOT EXISTS {config['GA']['table']} (
 '''
 cursor.execute(query)
 
+try:
+    query = f'''
+    CREATE UNIQUE INDEX IF NOT EXISTS voter_idx ON {config['GA']['table']} (county, voter_reg_num, ballot_style, ballot_req_dt, ballot_ret_dt, ballot_issue, ballot_rtn_status);
+    '''
+    cursor.execute(query)
+except:
+    print('Index already exists.')
+
 ga_dir = config['GA']['ga_files']
 
 for entry in os.scandir(ga_dir):
@@ -77,7 +85,7 @@ for entry in os.scandir(ga_dir):
   csv_file = os.path.join(new_file_dir, config['GA']['csv_name'])
 
   query =f'''
-  LOAD DATA LOCAL INFILE '{csv_file}'
+  LOAD DATA LOCAL INFILE '{csv_file}' IGNORE
   INTO TABLE {config['GA']['table']}
   CHARACTER SET latin1
   FIELDS TERMINATED BY ','
@@ -95,7 +103,9 @@ for entry in os.scandir(ga_dir):
   '''
 
   print(f'Database insertion started for {date}.')
+  start_time = time.time()
   cursor.execute(query)
   mydb.commit()
+  print(f'Rows added: {cursor.rowcount} Time taken: {time.time() - start_time} seconds.')
 
 print('Done.')

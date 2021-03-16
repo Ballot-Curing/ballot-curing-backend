@@ -137,6 +137,7 @@ csv_file = os.path.join(new_file_dir, config['GA']['csv_name'])
 query =f'''
 LOAD DATA LOCAL INFILE '{csv_file}'
 INTO TABLE {config['GA']['table']}
+CHARACTER SET latin1
 FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS (county, voter_reg_num, last_name, first_name, middle_name, @dummy, @street_no,
@@ -151,9 +152,11 @@ IGNORE 1 ROWS (county, voter_reg_num, last_name, first_name, middle_name, @dummy
                    ballot_ret_dt = STR_TO_DATE(@ret_dt, '%m/%d/%Y');
 '''
 
-print('Database query started.')
+print('Database insertion started.')
+start_time = time.time()
 
 cursor.execute(query)
 mydb.commit()
 
-print('Database query executed.')
+print('Database insertion executed.')
+print(f'Total time: {time.time() - start_time} seconds')
