@@ -6,9 +6,12 @@
   feather.replace()
 
   // Graphs
-  var ctx = document.getElementById('myChart')
+  var ctx = document.getElementById('lineChart')
+  
+
+
   // eslint-disable-next-line no-unused-vars
-  var myChart = new Chart(ctx, {
+  var lineChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: [
@@ -49,5 +52,29 @@
         display: false
       }
     }
+  })
+
+  var ctx = document.getElementById('donutChart')
+  var donutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: [
+        'Accepted',
+        'Rejected',
+        'Spoiled',
+        'Other'
+      ],
+      datasets: [{
+        data: [
+          80,
+          10,
+          5,
+          5
+        ],
+        backgroundColor: [
+          'red', 'blue', 'yellow', 'green'
+        ]
+      }]
+    },  options: Chart.defaults.doughnut
   })
 })()
