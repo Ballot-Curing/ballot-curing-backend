@@ -81,7 +81,7 @@ INTO TABLE {config['NC']['table']}
 CHARACTER SET latin1
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
+LINES TERMINATED BY '\r\n'
 IGNORE 1 LINES (county, voter_reg_num, @ignore, last_name, first_name, middle_name, race, 
                 ethnicity, gender, age, street_address, city, state, zip, @dummy, @dummy, @dummy,
                 @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @elec_date, 
