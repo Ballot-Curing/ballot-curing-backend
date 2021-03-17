@@ -139,6 +139,7 @@ LOAD DATA LOCAL INFILE '{csv_file}'
 INTO TABLE {config['GA']['table']}
 CHARACTER SET latin1
 FIELDS TERMINATED BY ','
+OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS (county, voter_reg_num, last_name, first_name, middle_name, @dummy, @street_no,
            @street_name, @apt_no, city, state, zip, @dummy, @dummy, @dummy, @dummy,
