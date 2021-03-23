@@ -17,13 +17,7 @@ target_file = config['NC']['zip_filename']
 # get file and write it to output 
 myfile = requests.get(url)
 open(target_file, 'wb').write(myfile.content)
-'''
-storage_path = config['NC']['storage_dir']
-today = date.today().strftime('%Y-%m-%d')
-new_file_dir = os.path.join(storage_path, today)
-if not os.path.exists(new_file_dir):
-  os.mkdir(new_file_dir)
-'''
+
 # unzips file
 with zipfile.ZipFile(target_file, 'r') as zip_ref:
   print('Unzipping file: ' + target_file)
@@ -33,6 +27,7 @@ with zipfile.ZipFile(target_file, 'r') as zip_ref:
 print('Deleting old zip file')
 os.remove(target_file)
 
+# connect to the database
 mydb = MySQLdb.connect(host=config['DATABASE']['host'],
     user=config['DATABASE']['user'],
     passwd=config['DATABASE']['passwd'],
@@ -41,6 +36,7 @@ mydb = MySQLdb.connect(host=config['DATABASE']['host'],
 
 cursor = mydb.cursor()
 
+# create the table for the NC data
 query = f'''
 CREATE TABLE IF NOT EXISTS {config['NC']['table']} (
   proc_date               DATETIME,
@@ -75,6 +71,40 @@ CREATE TABLE IF NOT EXISTS {config['NC']['table']} (
 cursor.execute(query)
 csv_file = os.path.join('./test_NC_data/', config['NC']['csv_name'])
 
+# drop the function if it already exists
+query = f'''
+DROP FUNCTION IF EXISTS STANDARDIZE
+'''
+cursor.execute(query)
+
+# define the standardization function
+query = f'''
+CREATE FUNCTION STANDARDIZE (return_issue VARCHAR(255))
+RETURNS VARCHAR(50)
+DETERMINISTIC
+BEGIN
+   
+   DECLARE return_val VARCHAR(50);
+   SET return_val = 'R';
+   IF (return_issue = 'ACCEPTED' OR return_issue = 'ACCEPTED - CURED') THEN
+        SET return_val = 'A';
+   ELSEIF return_issue = 'CANCELLED' THEN
+        SET return_val = 'C';
+   ELSEIF return_issue = 'SPOILED' THEN
+        SET return_val = 'S';
+   ELSEIF (return_issue = 'PENDING CURE' OR return_issue = 'NOT VOTED' OR    
+            return_issue = 'PENDING' OR return_issue = ' ') THEN
+        SET return_val = '';
+   END IF;
+
+   RETURN (return_val);
+
+END
+'''
+
+cursor.execute(query)
+
+# load the data into the database
 query =f'''
 LOAD DATA LOCAL INFILE '{csv_file}'
 INTO TABLE {config['NC']['table']}
@@ -86,12 +116,14 @@ IGNORE 1 LINES (county, voter_reg_num, @ignore, last_name, first_name, middle_na
                 ethnicity, gender, age, street_address, city, state, zip, @dummy, @dummy, @dummy,
                 @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @elec_date, 
 			   party_code, precinct, cong_dist, st_house, st_senate, @dummy, ballot_style, @dummy,
-			   @req_dt, @send_dt, @ret_dt, ballot_rtn_status, @dummy, @dummy, @dummy)
+			   @req_dt, @send_dt, @ret_dt, @ballot_status, @dummy, @dummy, @dummy)
                SET proc_date = NOW(),
                    election_dt = STR_TO_DATE(@elec_date, '%m/%d/%Y'),
                    ballot_req_dt = STR_TO_DATE(@req_dt, '%m/%d/%Y'),
                    ballot_send_dt = STR_TO_DATE(@send_dt, '%m/%d/%Y'),
-                   ballot_ret_dt = STR_TO_DATE(@ret_dt, '%m/%d/%Y');
+                   ballot_ret_dt = STR_TO_DATE(@ret_dt, '%m/%d/%Y'),
+                   ballot_issue = @ballot_status,
+                   ballot_rtn_status = STANDARDIZE(@ballot_status);
 '''
 
 print('Database query started.')
