@@ -6,7 +6,7 @@
     <meta name="description" content="">
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Hugo 0.80.0">
-    <title>Dashboard Template · Bootstrap v5.0</title>
+    <title>Home</title>
 
     <link rel="canonical" href="https://getbootstrap.com/docs/5.0/examples/dashboard/">
 
@@ -136,14 +136,27 @@
             <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
             <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
           </div>
-          <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
-            <span data-feather="folder"></span>
-            GA Senate Runoff - 1/5/21
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
-            <span data-feather="calendar"></span>
-            This week
-          </button>
+          <div class="dropdown">
+            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+              <span data-feather="folder"></span>
+              Select Election
+            </button>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="#">GA Senate Runoff (1/5/21)</a>
+              <a class="dropdown-item" href="#">NC General (11/3/20)</a>
+            </div>
+          </div>
+          <div class="dropdown">
+            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+              <span data-feather="calendar"></span>
+              Timeframe
+            </button>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="#">Since Start of Election</a>
+              <a class="dropdown-item" href="#">Past week</a>
+            </div>
+          </div>
+          
         </div>
       </div>
 
@@ -157,125 +170,125 @@
         <table class="table table-striped table-sm">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Header</th>
-              <th>Header</th>
-              <th>Header</th>
-              <th>Header</th>
+              <th>Voter Registration #</th>
+              <th>County</th>
+              <th>Address</th>
+              <th>Ballot Return Date</th>
+              <th>Ballot Issue</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>1,001</td>
-              <td>random</td>
-              <td>data</td>
-              <td>placeholder</td>
-              <td>text</td>
+              <td>598857</td>
+              <td>Fulton</td>
+              <td>2450 Peachtree Rd</td>
+              <td>01-01-21</td>
+              <td>Missing Signature</td>
             </tr>
             <tr>
-              <td>1,002</td>
-              <td>placeholder</td>
-              <td>irrelevant</td>
-              <td>visual</td>
-              <td>layout</td>
+              <td>87654</td>
+              <td>Fulton</td>
+              <td>7891 Peach Rd</td>
+              <td>01-03-21</td>
+              <td>Invalid Signature</td>
             </tr>
             <tr>
-              <td>1,003</td>
-              <td>data</td>
-              <td>rich</td>
-              <td>dashboard</td>
-              <td>tabular</td>
+              <td>98743</td>
+              <td>Cobb</td>
+              <td>2450 Georgia Rd</td>
+              <td>12-31-21</td>
+              <td>Missing Signature</td>
             </tr>
             <tr>
-              <td>1,003</td>
-              <td>information</td>
-              <td>placeholder</td>
-              <td>illustrative</td>
-              <td>data</td>
+              <td>123456</td>
+              <td>DeKalb</td>
+              <td>7632 Lewis Rd</td>
+              <td>01-01-21</td>
+              <td>MIDR - ID not Provided</td>
             </tr>
             <tr>
-              <td>1,004</td>
-              <td>text</td>
-              <td>random</td>
-              <td>layout</td>
-              <td>dashboard</td>
+              <td>67564</td>
+              <td>Fulton</td>
+              <td>7652 Peachtree Rd</td>
+              <td>12-29-21</td>
+              <td>MIDR - ID not Provided</td>
             </tr>
             <tr>
-              <td>1,005</td>
-              <td>dashboard</td>
-              <td>irrelevant</td>
-              <td>text</td>
-              <td>placeholder</td>
+              <td>598857</td>
+              <td>Fulton</td>
+              <td>2450 Peachtree Rd</td>
+              <td>01-01-21</td>
+              <td>Missing Signature</td>
             </tr>
             <tr>
-              <td>1,006</td>
-              <td>dashboard</td>
-              <td>illustrative</td>
-              <td>rich</td>
-              <td>data</td>
+              <td>598857</td>
+              <td>Fulton</td>
+              <td>2450 Peachtree Rd</td>
+              <td>01-01-21</td>
+              <td>Missing Signature</td>
             </tr>
             <tr>
-              <td>1,007</td>
-              <td>placeholder</td>
-              <td>tabular</td>
-              <td>information</td>
-              <td>irrelevant</td>
+              <td>598857</td>
+              <td>Fulton</td>
+              <td>2450 Peachtree Rd</td>
+              <td>01-01-21</td>
+              <td>Missing Signature</td>
             </tr>
             <tr>
-              <td>1,008</td>
-              <td>random</td>
-              <td>data</td>
-              <td>placeholder</td>
-              <td>text</td>
+              <td>598857</td>
+              <td>Fulton</td>
+              <td>2450 Peachtree Rd</td>
+              <td>01-01-21</td>
+              <td>Missing Signature</td>
             </tr>
             <tr>
-              <td>1,009</td>
-              <td>placeholder</td>
-              <td>irrelevant</td>
-              <td>visual</td>
-              <td>layout</td>
+              <td>598857</td>
+              <td>Fulton</td>
+              <td>2450 Peachtree Rd</td>
+              <td>01-01-21</td>
+              <td>Missing Signature</td>
             </tr>
             <tr>
-              <td>1,010</td>
-              <td>data</td>
-              <td>rich</td>
-              <td>dashboard</td>
-              <td>tabular</td>
+              <td>598857</td>
+              <td>Fulton</td>
+              <td>2450 Peachtree Rd</td>
+              <td>01-01-21</td>
+              <td>Missing Signature</td>
             </tr>
             <tr>
-              <td>1,011</td>
-              <td>information</td>
-              <td>placeholder</td>
-              <td>illustrative</td>
-              <td>data</td>
+              <td>598857</td>
+              <td>Fulton</td>
+              <td>2450 Peachtree Rd</td>
+              <td>01-01-21</td>
+              <td>Missing Signature</td>
             </tr>
             <tr>
-              <td>1,012</td>
-              <td>text</td>
-              <td>placeholder</td>
-              <td>layout</td>
-              <td>dashboard</td>
+              <td>598857</td>
+              <td>Fulton</td>
+              <td>2450 Peachtree Rd</td>
+              <td>01-01-21</td>
+              <td>Missing Signature</td>
             </tr>
             <tr>
-              <td>1,013</td>
-              <td>dashboard</td>
-              <td>irrelevant</td>
-              <td>text</td>
-              <td>visual</td>
+              <td>598857</td>
+              <td>Fulton</td>
+              <td>2450 Peachtree Rd</td>
+              <td>01-01-21</td>
+              <td>Missing Signature</td>
             </tr>
             <tr>
-              <td>1,014</td>
-              <td>dashboard</td>
-              <td>illustrative</td>
-              <td>rich</td>
-              <td>data</td>
+              <td>598857</td>
+              <td>Fulton</td>
+              <td>2450 Peachtree Rd</td>
+              <td>01-01-21</td>
+              <td>Missing Signature</td>
             </tr>
             <tr>
-              <td>1,015</td>
-              <td>random</td>
-              <td>tabular</td>
-              <td>information</td>
-              <td>text</td>
+              <td>598857</td>
+              <td>Fulton</td>
+              <td>2450 Peachtree Rd</td>
+              <td>01-01-21</td>
+              <td>Missing Signature</td>
             </tr>
           </tbody>
         </table>
