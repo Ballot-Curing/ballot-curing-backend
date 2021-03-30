@@ -6,6 +6,8 @@ ballots_bp = Blueprint('ballots', __name__)
 @ballots_bp.route('/ballots')
 def ballots():
   
+  state = "ga" # temporary
+  
   mydb = MySQLdb.connect(host=config['DATABASE']['host'],
     user=config['DATABASE']['user'],
     passwd=config['DATABASE']['passwd'],
@@ -19,5 +21,5 @@ def ballots():
   # if optional parameters are not null, add 'WHERE {optional parameter}' string to query 
   
   
-  return "Last processed: today"
+  return "Nothing for now"
   
