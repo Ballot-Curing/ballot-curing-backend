@@ -5,17 +5,20 @@ import queries
 
 from datetime import datetime, timedelta
 
+state = 'NC' # temp, TODO: change into an input
+
 config = configparser.ConfigParser()
 config.read('../config.ini')
-rejected_db = "rejected"
-cured_db = "cured"
-table = config['NC']['table']
+table = config[state]['table']
+rejected_db = "rejected_"+table
+cured_db = "cured_"+table
 
+# Special find_cured way for NC, since we don't have multiple days of snapshots to use classic find_cured
 def find_cured_NC():
 	mydb = MySQLdb.connect(host=config['DATABASE']['host'],
 							user=config['DATABASE']['user'],
 							passwd=config['DATABASE']['passwd'],
-							db=config['NC']['db'],
+							db=config[state]['db'],
 							local_infile=1)
 	print("Connected to db")
 
@@ -53,11 +56,12 @@ def find_cured_NC():
 	mydb.close()
 
 
-def mysqlconnectGA(today_datetime):
+# Adds entries to cured and rejected tables
+def find_cured(today_datetime):
 	mydb = MySQLdb.connect(host=config['DATABASE']['host'],
 							user=config['DATABASE']['user'],
 							passwd=config['DATABASE']['passwd'],
-							db=config['GA']['db'],
+							db=config[state]['db'],
 							local_infile=1)
 	print("Connected to db")
 
@@ -98,9 +102,10 @@ def mysqlconnectGA(today_datetime):
 # Driver Code
 if __name__ == "__main__":
 	
-	start_date = "10/10/20"
+  # TODO: Remove this for-loop for real election
+	start_date = "10/10/20" 
 	start_datetime = datetime.strptime(start_date, '%m/%d/%y')
 	for i in range(95):
 		print("Start date: " + str(start_datetime))
-		mysqlconnectGA(start_datetime)
+		find_cured(start_datetime)
 		start_datetime += timedelta(days=1)
