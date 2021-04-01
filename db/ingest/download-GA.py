@@ -12,6 +12,8 @@ from selenium.webdriver import ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
 
+from schema import schema_table, ga_load
+
 # include directories in PATH
 sys.path.append(os.path.join('..', 'shared'))
 sys.path.append(os.path.join('..', '..'))
@@ -27,7 +29,7 @@ name = config['GA']['name']
 op = ChromeOptions()
 op.add_argument('--headless')
 browser = Chrome(options=op)
-browser.get(('https://elections.sos.ga.gov/Elections/voterabsenteefile.do'))
+browser.get('https://elections.sos.ga.gov/Elections/voterabsenteefile.do')
 print('Selenium driver started.')
 
 # select year
