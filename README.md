@@ -5,7 +5,9 @@ See our website [here](http://www.cnds.jhu.edu/courses/cs310/vote-by-mail/)
 
 ## Repository Architecture
 Front-end is in `frontend/`.
+
 Flask back-end is in `api/`.
+
 State ingest programs, daily querying programs, and ballot statistics programs are in `db/`.
 
 ## Configuration
