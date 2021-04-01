@@ -12,6 +12,8 @@ from selenium.webdriver import ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
 
+from ../schema/schema import schema_table, schema_index
+
 config = configparser.ConfigParser()
 config.read('config.ini')
 
@@ -23,44 +25,12 @@ mydb = MySQLdb.connect(host=config['DATABASE']['host'],
 
 cursor = mydb.cursor()
 
-query = f'''
-CREATE TABLE IF NOT EXISTS {config['GA']['table']} (
-  id                      INT NOT NULL AUTO_INCREMENT, 
-  proc_date               DATETIME,
-  county                  VARCHAR(25),
-  voter_reg_num           INT,
-  first_name              VARCHAR(50),
-  middle_name             VARCHAR(50),
-  last_name               VARCHAR(50),
-  race                    VARCHAR(50),
-  ethnicity               VARCHAR(50),
-  gender                  VARCHAR(10),
-  age                     INT,
-  street_address          VARCHAR(255),
-  city                    VARCHAR(50),
-  state                   VARCHAR(10),
-  zip                     VARCHAR(10),
-  election_dt             DATETIME,
-  party_code              VARCHAR(10),
-  precinct                VARCHAR(50),
-  cong_dist               VARCHAR(50),
-  st_house                VARCHAR(50),
-  st_senate               VARCHAR(50),
-  ballot_style            VARCHAR(50),
-  ballot_req_dt           DATETIME,
-  ballot_send_dt         	DATETIME,
-  ballot_ret_dt	          DATETIME,
-  ballot_issue            VARCHAR(255),
-  ballot_rtn_status       VARCHAR(50),
-  PRIMARY KEY(id)
-);
-'''
+query = schema_table(config['GA']['table']);
+
 cursor.execute(query)
 
 try:
-    query = f'''
-    CREATE UNIQUE INDEX IF NOT EXISTS voter_idx ON {config['GA']['table']} (county, voter_reg_num, ballot_style, ballot_req_dt, ballot_ret_dt, ballot_issue, ballot_rtn_status);
-    '''
+    query = schema_index(config['GA']['table'])
     cursor.execute(query)
 except:
     print('Index already exists.')
