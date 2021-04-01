@@ -1,5 +1,5 @@
 config.ini
 .DS_Store
-test_data/*
+test_data
 *.swp
 __pycache__

@@ -7,6 +7,8 @@ import time
 
 from datetime import date
 
+from ../schema/schema import *
+
 config = configparser.ConfigParser()
 config.read('config.ini')
 
@@ -36,37 +38,7 @@ mydb = MySQLdb.connect(host=config['DATABASE']['host'],
 
 cursor = mydb.cursor()
 
-# create the table for the NC data
-query = f'''
-CREATE TABLE IF NOT EXISTS {config['NC']['table']} (
-  proc_date               DATETIME,
-  county                  VARCHAR(25),
-  voter_reg_num           INT,
-  first_name              VARCHAR(50),
-  middle_name             VARCHAR(50),
-  last_name               VARCHAR(50),
-  race                    VARCHAR(50),
-  ethnicity               VARCHAR(50),
-  gender                  VARCHAR(10),
-  age                     INT,
-  street_address          VARCHAR(255),
-  city                    VARCHAR(50),
-  state                   VARCHAR(10),
-  zip                     VARCHAR(10),
-  election_dt             DATETIME,
-  party_code              VARCHAR(10),
-  precinct                VARCHAR(50),
-  cong_dist               VARCHAR(50),
-  st_house                VARCHAR(50),
-  st_senate               VARCHAR(50),
-  ballot_style            VARCHAR(50),
-  ballot_req_dt           DATETIME,
-  ballot_send_dt         	DATETIME,
-  ballot_ret_dt	          DATETIME,
-  ballot_issue            VARCHAR(255),
-  ballot_rtn_status       VARCHAR(50)
-);
-'''
+query = schema_table(config['NC']['table'])
 
 cursor.execute(query)
 csv_file = os.path.join('./test_NC_data/', config['NC']['csv_name'])
@@ -112,7 +84,7 @@ CHARACTER SET latin1
 FIELDS TERMINATED BY ','
 ENCLOSED BY '"'
 LINES TERMINATED BY '\r\n'
-IGNORE 1 LINES (county, voter_reg_num, @ignore, last_name, first_name, middle_name, race, 
+IGNORE 1 LINES (county, @ignore, voter_reg_id, last_name, first_name, middle_name, race, 
                 ethnicity, gender, age, street_address, city, state, zip, @dummy, @dummy, @dummy,
                 @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @dummy, @elec_date, 
 			   party_code, precinct, cong_dist, st_house, st_senate, @dummy, ballot_style, @dummy,
