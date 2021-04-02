@@ -9,7 +9,7 @@ lastProcessed_bp = Blueprint('lastProcessed', __name__)
 
 @lastProcessed_bp.route('/')
 def lastProcessed():
-	
+
 	# get state parameter
 	if 'state' in request.args:
 		state = request.args['state']
@@ -39,7 +39,7 @@ def lastProcessed():
 	query = " SELECT processed FROM processed WHERE election = ' " + election_dt.strftime("%y/%m/%d") + " '; "
 	cursor.execute(query)
 
-	# get result (note should only be one row since )
+	# get result (note should only be one row since only one matching election)
 	output = cursor.fetchall()
 	for row in output:
 		result = row[0]
