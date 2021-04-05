@@ -37,7 +37,7 @@ def find_cured_NC():
 	
 	# for each cured entry, add to cured_db
 	for entry in output:
-		cursor.execute(queries.add_to_cured(
+		cursor.execute(queries.add_to_cured_NC(
 			cured_db, entry, datetime.strptime("10/10/20", '%m/%d/%y')))
 		mydb.commit()
 
@@ -48,7 +48,7 @@ def find_cured_NC():
 
 	# for each rejected entry, add to rejected table
 	for entry in output:
-		cursor.execute(queries.add_to_rejected(
+		cursor.execute(queries.add_to_rejected_NC(
 			rejected_db, entry, datetime.strptime("10/10/20", '%m/%d/%y')))
 		mydb.commit()
 
