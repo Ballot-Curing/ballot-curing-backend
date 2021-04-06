@@ -5,10 +5,10 @@ import queries
 
 from datetime import datetime, timedelta
 
-state = 'NC' # temp, TODO: change into an input
+state = 'GA' # temp, TODO: change into an input
 
 config = configparser.ConfigParser()
-config.read('../config.ini')
+config.read('config.ini')
 table = config[state]['table']
 rejected_db = "rejected_"+table
 cured_db = "cured_"+table
@@ -31,14 +31,13 @@ def find_cured_NC():
 	cursor.execute(queries.create_rejected_table(rejected_db))
 
 	# get all cured ballots as of today
-	print("Get all cured ballots")
+	print("Getting all cured ballots for NC")
 	cursor.execute(queries.get_cured_NC(table))
 	output = cursor.fetchall()
 	
 	# for each cured entry, add to cured_db
 	for entry in output:
-		cursor.execute(queries.add_to_cured_NC(
-			cured_db, entry, datetime.strptime("10/10/20", '%m/%d/%y')))
+		cursor.execute(queries.add_to_cured_NC(cured_db, entry))
 		mydb.commit()
 
 	# get all of the rejected ballots
@@ -48,8 +47,7 @@ def find_cured_NC():
 
 	# for each rejected entry, add to rejected table
 	for entry in output:
-		cursor.execute(queries.add_to_rejected_NC(
-			rejected_db, entry, datetime.strptime("10/10/20", '%m/%d/%y')))
+		cursor.execute(queries.add_to_rejected_NC(rejected_db, entry))
 		mydb.commit()
 
 	# To close the connection
@@ -73,16 +71,15 @@ def find_cured(today_datetime):
 	# make rejected table if not made
 	cursor.execute(queries.create_rejected_table(rejected_db))
 	
-	# get all cured ballots as of today
-	print("Get all cured ballots")
-	cursor.execute(queries.get_cured(table))
-	output = cursor.fetchall()
+	# # get all cured ballots as of today
+	# print("Get all cured ballots")
+	# cursor.execute(queries.get_cured(table))
+	# output = cursor.fetchall()
 
-	# for each cured entry, add to cured_db
-	for entry in output:
-		cursor.execute(queries.add_to_cured(
-			cured_db, entry, today_datetime))
-		mydb.commit()
+	# # for each cured entry, add to cured_db
+	# for entry in output:
+	# 	cursor.execute(queries.add_to_cured(cured_db, entry))
+	# 	mydb.commit()
 
 	# query the current day for any new rejected that are not cured
 	print("Getting today's rejected ballots from main table")
@@ -92,7 +89,7 @@ def find_cured(today_datetime):
 	# for each rejected entry today, add to rejected table
 	for entry in output:
 		cursor.execute(queries.add_to_rejected(
-			rejected_db, entry, today_datetime))
+			rejected_db, entry))
 		mydb.commit()
 
 	# To close the connection
@@ -103,9 +100,9 @@ def find_cured(today_datetime):
 if __name__ == "__main__":
 	
   # TODO: Remove this for-loop for real election
-	start_date = "10/10/20" 
+	start_date = "10/30/20" 
 	start_datetime = datetime.strptime(start_date, '%m/%d/%y')
-	for i in range(95):
+	for i in range(2):
 		print("Start date: " + str(start_datetime))
 		find_cured(start_datetime)
 		start_datetime += timedelta(days=1)
