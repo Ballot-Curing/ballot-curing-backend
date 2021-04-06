@@ -14,13 +14,9 @@ from selenium.webdriver.support.select import Select
 
 from schema import schema_table, ga_load
 
-# include directories in PATH
-sys.path.append(os.path.join('..', 'shared'))
-sys.path.append(os.path.join('..', '..'))
-sys.path.append(os.path.join('..'))
-
 config = configparser.ConfigParser()
-config.read('config.ini')
+# input path to config file
+config.read('/home/cs310_prj3/Ballot-Curing-Project/config.ini')
 
 year = config['GA']['year']
 name = config['GA']['name']
