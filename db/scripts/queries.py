@@ -92,8 +92,7 @@ def get_today_rejected(table, today_datetime, cured_db):
     ON today.voter_reg_id = cured.voter_reg_id
     WHERE 
     cured.voter_reg_id IS NULL 
-    AND today.ballot_rtn_status = "R"
-    AND today.ballot_ret_dt = "{today_datetime}";
+    AND today.ballot_rtn_status = "R";
     '''
 
 def get_cured(table):
