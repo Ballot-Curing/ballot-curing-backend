@@ -7,7 +7,7 @@ import time
 
 from datetime import date
 
-from ../schema/schema import *
+from schema import schema_table
 
 config = configparser.ConfigParser()
 config.read('config.ini')
