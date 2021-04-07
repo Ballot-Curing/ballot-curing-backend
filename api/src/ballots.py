@@ -3,6 +3,7 @@ import configparser
 
 from datetime import datetime
 from flask import Blueprint
+from flask import jsonify
 from flask import request as req
 
 from schema import schema_col_names
@@ -29,7 +30,7 @@ def ballots():
 
   # optional parameters
   for param in schema_col_names:
-    if param in where_clause: 
+    if param in where_clause or param == 'state' or param == 'election_dt': 
       continue
     else:
       val = req.args.get(param, None)
@@ -42,7 +43,7 @@ def ballots():
   limit = int(req.args.get('limit', 10))
   limit_clause = f'LIMIT {limit}' if limit != -1 else ''
 
-  # TODO support historic data requests
+  # TODO support historic data requests - run query on `rejected` table, otherwise run on main table
   historic = req.args.get('show_historic', False)
 
   mydb = MySQLdb.connect(host=config['DATABASE']['host'],
@@ -51,9 +52,8 @@ def ballots():
     db=config[state]['db'],
     local_infile = 1)
   
-  cursor = mydb.cursor()
+  cur = mydb.cursor()
 
-  # run query with election_dt as table name
   db_table_name = elec_dt.strftime('%m_%d_%Y')
 
   query = f'''
@@ -63,14 +63,23 @@ def ballots():
   {limit_clause};
   '''
 
-  print(query)
-  cursor.execute(query)
-  mydb.commit()
+  print(f'DEBUG:\n{query}')
 
-  # if show_historic is false, then run query on `rejected` table, otherwise run on main table
+  cur.execute(query)
+
+  # attach row headers, remove ID, return json
+  row_headers = [x[0] for x in cur.description]
+  id_idx = row_headers.index('id')
+  row_headers.pop(id_idx)
+
+  rows = cur.fetchall()
   
-  # if optional parameters are not null, add 'WHERE {optional parameter}' string to query 
+  data = []
   
-  
-  return "Nothing for now"
-  
+  for row in rows:
+    mod_row = list(row)
+    mod_row.pop(id_idx)
+    data.append(dict(zip(row_headers, mod_row)))
+
+  return jsonify(data)
+
