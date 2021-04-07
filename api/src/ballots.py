@@ -17,7 +17,7 @@ config.read('/home/cs310_prj3/Ballot-Curing-Project/config.ini')
 def ballots():
  
   # required parameters - throws error if not present
-  state = upper(req.args['state'])
+  state = req.args['state'].upper()
   elec_dt = datetime.strptime(req.args['election_dt'], '%m-%d-%Y')
  
   # build WHERE clause for optional parameters on the fly for optimized SQL query times
@@ -25,7 +25,7 @@ def ballots():
 
   # set any default values for params if needed
   rtn_status = req.args.get('ballot_rtn_status', 'R')
-  where_clause += f'ballot_rtn_status = "{rtn_status}" AND'
+  where_clause += f'ballot_rtn_status = "{rtn_status}" AND '
 
   # optional parameters
   for param in schema_col_names:
@@ -33,10 +33,10 @@ def ballots():
       continue
     else:
       val = req.args.get(param, None)
-      where_clause += f'{param} = "{val}" AND' if val else '' # double quotes important to prevent SQL injection
+      where_clause += f'{param} = "{val}" AND ' if val else '' # double quotes important to prevent SQL injection
 
   # remove last AND
-  where_clause = where_clause[:-4]
+  where_clause = where_clause[:-5]
 
 
   limit = int(req.args.get('limit', 10))

@@ -8,3 +8,7 @@ app.register_blueprint(ballots_bp, url_prefix='/api/v1/ballots')
 
 app.register_blueprint(lastProcessed_bp, url_prefix='/api/v1/lastProcessed')
 app.register_blueprint(ballots_bp, url_prefix='/api/v1/ballots')
+
+@app.route('/')
+def root():
+    return 'You have reached the CS310 vote-by-mail project\'s API.'
