@@ -1,3 +1,32 @@
+schema_col_names = [
+    'proc_date', 
+    'county',
+    'voter_reg_id',
+    'first_name',
+    'middle_name',
+    'last_name',
+    'race',
+    'ethnicity',
+    'gender',
+    'age',
+    'street_address',
+    'city',
+    'state',
+    'zip',
+    'election_dt',
+    'party_code',
+    'precinct',
+    'cong_dist',
+    'st_house',
+    'st_senate',
+    'ballot_style',
+    'ballot_req_dt',
+    'ballot_send_dt',
+    'ballot_ret_dt',
+    'ballot_issue',
+    'ballot_rtn_status',
+]
+
 # General schema creation functions
 
 def schema_table(table):

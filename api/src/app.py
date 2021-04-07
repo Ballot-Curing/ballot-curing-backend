@@ -6,6 +6,5 @@ app = Flask(__name__)
 app.register_blueprint(lastProcessed_bp, url_prefix='/api/v1/lastProcessed')
 app.register_blueprint(ballots_bp, url_prefix='/api/v1/ballots')
 
-@app.route('/')
-def hello_world():
-    return 'Hello, World!'
+app.register_blueprint(lastProcessed_bp, url_prefix='/api/v1/lastProcessed')
+app.register_blueprint(ballots_bp, url_prefix='/api/v1/ballots')
