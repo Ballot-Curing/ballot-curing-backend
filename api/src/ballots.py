@@ -20,35 +20,27 @@ def ballots():
   state = upper(req.args['state'])
   elec_dt = datetime.strptime(req.args['election_dt'], '%m-%d-%Y')
  
-  params = {} 
+  # build WHERE clause for optional parameters on the fly for optimized SQL query times
+  where_clause = ''
+
+  # set any default values for params if needed
+  rtn_status = req.args.get('ballot_rtn_status', 'R')
+  where_clause += f'ballot_rtn_status = "{rtn_status}" AND'
+
   # optional parameters
   for param in schema_col_names:
-    if param == 'ballot_rtn_status' 
+    if param in where_clause: 
+      continue
+    else:
+      val = req.args.get(param, None)
+      where_clause += f'{param} = "{val}" AND' if val else '' # double quotes important to prevent SQL injection
 
-  params[ballot_rtn_status] = req.args.get('ballot_rtn_status', 'R')
-  params[county] = req.args.get('county', '')
-  params[voter_reg_id] = req.args.get('voter_reg_id', '')
-  params[first_name] = req.args.get('first_name', '')
-  params[middle_name] = req.args.get('middle_name', '')
-  params[last_name] = req.args.get('last_name', '')
-  params[race] = req.args.get('race', '')
-  params[ethnicity] = req.args.get('ethnicity', '')
-  params[gender] = req.args.get('gender', '')
-  params[age] = req.args.get('age', '')
-  params[street] = req.args.get('street_address', '')
-  params[city] = req.args.get('city', '')
-  params[zipcode] = req.args.get('zip', '')
-  params[party] = req.args.get('party_code', '')
-  params[precinct] = req.args.get('precinct', '')
-  params[cong] = req.args.get('cong_dist', '')
-  params[st_house] = req.args.get('st_house', '')
-  params[st_senate] = req.args.get('st_senate', '')
-  params[style] = req.args.get('ballot_style', '')
-  params[req_dt] = req.args.get('ballot_req_dt', None)
-  params[send_dt] = req.args.get('ballot_send_dt', None)
-  params[ret_dt] = req.args.get('ballot_ret_dt', None)
-  params[issue] = req.args.get('ballot_issue', '')
-  params[limit] = req.args.get('limit', 10)
+  # remove last AND
+  where_clause = where_clause[:-4]
+
+
+  limit = int(req.args.get('limit', 10))
+  limit_clause = f'LIMIT {limit}' if limit != -1 else ''
 
   # TODO support historic data requests
   historic = req.args.get('show_historic', False)
@@ -63,24 +55,15 @@ def ballots():
 
   # run query with election_dt as table name
   db_table_name = elec_dt.strftime('%m_%d_%Y')
-  
-
-  # pre-construct WHERE clause from parameters for optimized SQL query speed
-  where = ''
-
-  for param, val in params.items():
-    where += f''
-
-  where += f'ballot_rtn_status = "{rtn_status}" AND'
-  where += f'county = "{county}"' if county else ''
-  where += f'voter_reg_id = "voter_reg_id"' if voter_reg_id else ''
 
   query = f'''
   SELECT *
   FROM {db_table_name}
-  {where_clause}
+  WHERE {where_clause}
+  {limit_clause};
   '''
 
+  print(query)
   cursor.execute(query)
   mydb.commit()
 
