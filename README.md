@@ -19,5 +19,3 @@ export PYTHONPATH=$PYTHONPATH:/path/to/Ballot-Curing-Project:/path/to/Ballot-Cur
 
 Set up variables for state configurations in `config.ini`. A sample configuration is provided.
 
-
-
