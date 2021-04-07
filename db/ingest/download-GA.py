@@ -12,13 +12,11 @@ from selenium.webdriver import ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
 
-# include directories in PATH
-sys.path.append(os.path.join('..', 'shared'))
-sys.path.append(os.path.join('..', '..'))
-sys.path.append(os.path.join('..'))
+from schema import schema_table, ga_load
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+# input path to config file
+config.read('/home/cs310_prj3/Ballot-Curing-Project/config.ini')
 
 year = config['GA']['year']
 name = config['GA']['name']
@@ -27,7 +25,7 @@ name = config['GA']['name']
 op = ChromeOptions()
 op.add_argument('--headless')
 browser = Chrome(options=op)
-browser.get(('https://elections.sos.ga.gov/Elections/voterabsenteefile.do'))
+browser.get('https://elections.sos.ga.gov/Elections/voterabsenteefile.do')
 print('Selenium driver started.')
 
 # select year
