@@ -5,6 +5,8 @@ $(document).ready(function() {
 
     $("#header-placeholder").load("../components/header.html");
 
+    $("#parameterDropdowns-placeholder").load("../components/parameterDropdowns");
+
     $(".dropdown-item").on("click", function() {
       console.log("Hi");
       // var value = $(this).val().toLowerCase();
