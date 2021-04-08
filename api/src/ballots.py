@@ -81,5 +81,9 @@ def ballots():
     mod_row.pop(id_idx)
     data.append(dict(zip(row_headers, mod_row)))
 
-  return jsonify(data)
+  response = jsonify(data)
+  response.headers.add('Access-Control-Allow-Origin', '*')
+
+  return response
+
 
