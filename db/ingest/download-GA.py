@@ -15,8 +15,8 @@ from selenium.webdriver.support.select import Select
 from schema import schema_table, ga_load
 
 config = configparser.ConfigParser()
-# input path to config file
-config.read('/home/cs310_prj3/Ballot-Curing-Project/config.ini')
+if not config.read('config.ini'):
+    raise Exception('config.ini not in current directory. Please run again from top-level directory.')
 
 year = config['GA']['year']
 name = config['GA']['name']
