@@ -1,6 +1,6 @@
 function ajaxRequest(params) {
     
-    var url = 'https://run.mocky.io/v3/855fe37e-0965-4e90-9cb5-1b233c323c07'
+    var url = 'http://128.220.221.36:5500/api/v1/ballots/?state=GA&election_dt=01-04-2021'
     $.get(url + '?' + $.param(params.data)).then(function (res) {
         params.success(res)
     })
