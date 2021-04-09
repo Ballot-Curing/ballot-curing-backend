@@ -1,12 +1,10 @@
-# Ballot Curing Project
+# Ballot Curing Project - Backend
 Vote-by-Mail team project for EN.601.310 Software for Resilient Communities 
 
 See our website [here](http://www.cnds.jhu.edu/courses/cs310/vote-by-mail/)
 
 ## Repository Architecture
-Front-end is in `frontend/`.
-
-Flask back-end is in `api/`.
+Flask API endpoints are in `api/`.
 
 State ingest programs, daily querying programs, and ballot statistics programs are in `db/`.
 
