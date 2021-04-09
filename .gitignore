@@ -3,3 +3,4 @@ config.ini
 test_data
 *.swp
 __pycache__
+frontend/
