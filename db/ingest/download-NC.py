@@ -8,7 +8,7 @@ import time
 from datetime import date
 
 from schema import schema_table
-from elections import elections_table, elections_load
+from elections import elections_table, update_proc_date
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -113,15 +113,7 @@ query = elections_table()
 cursor.execute(query)
 mydb.commit()
 
-# update the value of election last processed date
-today = date.today()
-test_proc_date = today.strftime("%m/%d/%Y")
-
-entry = {
-  "election_dt": config['NC']['table'], 
-  "proc_date": test_proc_date
-}
-
-query = elections_load(entry)
+# update processed date
+query = update_proc_date(config['NC']['table'])
 cursor.execute(query)
 mydb.commit()
