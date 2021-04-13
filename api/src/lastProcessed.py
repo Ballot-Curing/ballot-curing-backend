@@ -13,27 +13,30 @@ def lastProcessed():
     # get state parameter
     if 'state' in request.args:
         state = request.args['state']
-        state = state.lower()
+        state = state.upper()
     else:
-        return "ERROR: No state specified"
+        return "404 bad request"
 
     # get election_dt parameter
     if 'election_dt' in request.args:
-        election_dt = datetime.strptime(request.args['election_dt'], '%m/%d/%y')
+        election_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
     else:
-        return "ERROR: No election date provided"
+        return "404 bad request"
 
     # parse the config file
     config = configparser.ConfigParser()
-    if not config.read('config.ini'):
+    if not config.read('../../config.ini'):
         raise Exception('config.ini not in current directory. Please run again from top-level directory.')
 
     # connect to the database
-    mydb = MySQLdb.connect(host=config['DATABASE']['host'],
-        user=config['DATABASE']['user'],
-        passwd=config['DATABASE']['passwd'],
-        db="vote_"+state, 
-        local_infile = 1)
+    try:
+        mydb = MySQLdb.connect(host=config['DATABASE']['host'],
+            user=config['DATABASE']['user'],
+            passwd=config['DATABASE']['passwd'],
+            db=config[state]['db'], 
+            local_infile = 1)
+    except:
+        return "404 bad request"
 
     # run query to get processed date for that election
     cursor = mydb.cursor()
@@ -42,6 +45,9 @@ def lastProcessed():
 
     # get result (note should only be one row since only one matching election)
     output = cursor.fetchall()
+    # if no result, then input date was invalid
+    if len(output) == 0:
+        return "404 bad request"
     for row in output:
         result = row[0]
 
