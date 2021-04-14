@@ -1,6 +1,7 @@
 from flask import Blueprint
 from flask import request
 from flask import jsonify
+from flask import abort
 import MySQLdb
 import configparser
 from datetime import datetime
@@ -10,18 +11,12 @@ lastProcessed_bp = Blueprint('lastProcessed', __name__)
 @lastProcessed_bp.route('/')
 def lastProcessed():
 
-    # get state parameter
-    if 'state' in request.args:
-        state = request.args['state']
-        state = state.upper()
-    else:
-        return "404 bad request"
-
-    # get election_dt parameter
-    if 'election_dt' in request.args:
+    # get state/election_dt parameters
+    try:
+        state = request.args['state'].upper()
         election_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
-    else:
-        return "404 bad request"
+    except:
+        abort(404, description="Resource not found")
 
     # parse the config file
     config = configparser.ConfigParser()
@@ -36,18 +31,21 @@ def lastProcessed():
             db=config[state]['db'], 
             local_infile = 1)
     except:
-        return "404 bad request"
+        abort(500, description="internal service failure")
 
     # run query to get processed date for that election
     cursor = mydb.cursor()
     query = " SELECT processed FROM processed WHERE election = ' " + election_dt.strftime("%y/%m/%d") + " '; "
-    cursor.execute(query)
+    try:
+        cursor.execute(query)
+    except:
+        abort(500, description="internal service failure")
 
     # get result (note should only be one row since only one matching election)
     output = cursor.fetchall()
     # if no result, then input date was invalid
     if len(output) == 0:
-        return "404 bad request"
+        abort(404, description="Resource not found")
     for row in output:
         result = row[0]
 

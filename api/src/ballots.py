@@ -5,6 +5,7 @@ from datetime import datetime
 from flask import Blueprint
 from flask import jsonify
 from flask import request as req
+from flask import abort
 
 from schema import schema_col_names
 
@@ -22,7 +23,7 @@ def ballots():
     state = req.args['state'].upper()
     elec_dt = datetime.strptime(req.args['election_dt'], '%m-%d-%Y')
   except:
-    return "404 bad request"
+    abort(404, description="Resource not found")
  
   # build WHERE clause for optional parameters on the fly for optimized SQL query times
   where_clause = ''
@@ -57,7 +58,7 @@ def ballots():
       local_infile = 1)
   except:
     # if connection failed, then input state was not valid
-    return "404 bad request"
+    abort(500, description="internal service failure")
   
   cur = mydb.cursor()
 
@@ -76,7 +77,7 @@ def ballots():
     cur.execute(query)
   except:
     # if valid, then election_dt not valid
-    return "404 bad request"
+    abort(500, description="internal service failure")
 
   # attach row headers, remove ID, return json
   row_headers = [x[0] for x in cur.description]
