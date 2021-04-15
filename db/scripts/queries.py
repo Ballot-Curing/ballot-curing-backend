@@ -146,10 +146,27 @@ def add_to_rejected_NC(rejected_db, entry):
 def create_state_stats_table(table):
   return f'''
   CREATE TABLE IF NOT EXISTS {table} (
-      id                      INT NOT NULL PRIMARY KEY,
+      id                      INT NOT NULL AUTO_INCREMENT,
 			proc_date               DATETIME,
 			election_dt             DATETIME,
 			tot_rejected            INT,
 			tot_cured               INT,
+      PRIMARY KEY (id)
 		);
+  '''
+
+def get_cured_count(cured_table):
+  return f'''
+  select count(*) as num_cured from {cured_table};
+  '''
+
+def get_rej_count(rej_table):
+  return f'''
+  select count(*) as num_rej from {rej_table};
+  '''
+
+def add_state_stat(state_table, proc_date, election_dt, tot_rejected, tot_cured):
+  return f'''
+  INSERT INTO {state_table} (proc_date, election_dt, tot_rejected, tot_cured) 
+  VALUES(STR_TO_DATE('{proc_date}','%m/%d/%Y'), STR_TO_DATE("{election_dt}",'%m_%d_%Y'), {tot_rejected}, {tot_cured});
   '''
