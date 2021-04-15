@@ -64,4 +64,7 @@ def stats():
         "county_cured" : county_cured,
     }
 
-    return jsonify(ret)
+    response = jsonify(ret)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return response
