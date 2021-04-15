@@ -61,27 +61,49 @@ def get_county_stats(state):
               passwd=config['DATABASE']['passwd'],
               db=config[state]['db'],
               local_infile=1)
+  print("Connected to db of " + state)
   cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
   # create county_stats DB if not created
+  county_stats_table = state + '_county_stats'
+  cursor.execute(queries.create_county_stats_table(county_stats_table))
 
-  # query for list of all counties for state
+  # query for list of counties
+  cursor.execute(queries.get_counties(table))
+  output = cursor.fetchall()
 
-  # for each county query size of cured table for given county
+  for entry in output:
+    county = entry['county']
 
-  # for each county query size of rejected table for given county
+    # get num cured for the county
+    cured_table = "cured_" + table
+    cursor.execute(queries.get_cured_ballots_from_county(cured_table, county))
+    output = cursor.fetchall()
+    num_cured = output[0]['num_cured']
 
-  # add entry in county_stats
+    # get num rejected for the county
+    rej_table = "rejected_" + table
+    cursor.execute(queries.get_rej_ballots_from_county(rej_table, county))
+    output = cursor.fetchall()
+    num_rej = output[0]['num_rej']
+  
+    # add entry in county_stats
+    election_dt = config[state]['table']
+    proc_date = date.today().strftime("%m/%d/%Y")
+
+    cursor.execute(queries.add_county_stat(county_stats_table, county, proc_date, election_dt, num_rej, num_cured))
+    mydb.commit()
+
+  # close the connection
+  mydb.close()
 
 
 
-
-# TODO: implement for counties
+# TODO: if ran more than once on same day, it still adds to DB. fix this
 # Driver Code
 if __name__ == "__main__":
-  # for each state, get state stats
   for state in states:
     get_state_stats(state)
-  
-  # for each state, find all of its counties, and do county query
+    get_county_stats(state)
+
 

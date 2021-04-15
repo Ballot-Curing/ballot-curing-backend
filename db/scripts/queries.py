@@ -170,3 +170,37 @@ def add_state_stat(state_table, proc_date, election_dt, tot_rejected, tot_cured)
   INSERT INTO {state_table} (proc_date, election_dt, tot_rejected, tot_cured) 
   VALUES(STR_TO_DATE('{proc_date}','%m/%d/%Y'), STR_TO_DATE("{election_dt}",'%m_%d_%Y'), {tot_rejected}, {tot_cured});
   '''
+
+def create_county_stats_table(table):
+  return f'''
+  CREATE TABLE IF NOT EXISTS {table} (
+      id                      INT NOT NULL AUTO_INCREMENT,
+      county                  VARCHAR(25),
+			proc_date               DATETIME,
+			election_dt             DATETIME,
+			tot_rejected            INT,
+			tot_cured               INT,
+      PRIMARY KEY (id)
+		);
+  '''
+
+def get_counties(table):
+  return f'''
+  select distinct(county) from {table};
+  '''
+
+def get_cured_ballots_from_county(cured_table, county):
+  return f'''
+  select count(*) as num_cured from {cured_table} where county = '{county}';
+  '''
+
+def get_rej_ballots_from_county(rej_table, county):
+  return f'''
+  select count(*) as num_rej from {rej_table} where county = '{county}';
+  '''
+
+def add_county_stat(county_table, county, proc_date, election_dt, tot_rejected, tot_cured):
+  return f'''
+  INSERT INTO {county_table} (county, proc_date, election_dt, tot_rejected, tot_cured) 
+  VALUES("{county}", STR_TO_DATE('{proc_date}','%m/%d/%Y'), STR_TO_DATE("{election_dt}",'%m_%d_%Y'), {tot_rejected}, {tot_cured});
+  '''
