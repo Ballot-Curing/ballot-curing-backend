@@ -20,7 +20,7 @@ def lastProcessed():
 
     # parse the config file
     config = configparser.ConfigParser()
-    if not config.read('../../config.ini'):
+    if not config.read('config.ini'):
         raise Exception('config.ini not in current directory. Please run again from top-level directory.')
 
     # connect to the database
