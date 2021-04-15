@@ -35,7 +35,8 @@ def lastProcessed():
 
     # run query to get processed date for that election
     cursor = mydb.cursor()
-    query = " SELECT processed FROM processed WHERE election = ' " + election_dt.strftime("%y/%m/%d") + " '; "
+    query = " SELECT proc_date FROM elections WHERE election_dt = '" + election_dt.strftime("%y/%m/%d") + "'; "
+    print("debug: " + query)
     try:
         cursor.execute(query)
     except:
@@ -56,5 +57,7 @@ def lastProcessed():
         "last_proc" : result.strftime("%m/%d/%Y")
     }
 
-    return jsonify(ret_dict)
+    response = jsonify(ret_dict)
+    response.headers.add('Access-Control-Allow-Origin', '*')
 
+    return response
