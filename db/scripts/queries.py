@@ -142,3 +142,14 @@ def add_to_rejected_NC(rejected_db, entry):
 			"{entry["party_code"]}", "{entry["precinct"]}", "{entry["cong_dist"]}", "{entry["st_house"]}", "{entry["st_senate"]}", "{entry["ballot_style"]}", "{entry["ballot_req_dt"]}",
 			"{entry["ballot_send_dt"]}", "{entry["ballot_ret_dt"]}", "{entry["ballot_issue"]}", "{entry["ballot_rtn_status"]}");
 			'''
+
+def create_state_stats_table(table):
+  return f'''
+  CREATE TABLE IF NOT EXISTS {table} (
+      id                      INT NOT NULL PRIMARY KEY,
+			proc_date               DATETIME,
+			election_dt             DATETIME,
+			tot_rejected            INT,
+			tot_cured               INT,
+		);
+  '''
