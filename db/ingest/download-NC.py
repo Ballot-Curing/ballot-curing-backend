@@ -8,6 +8,7 @@ import time
 from datetime import date
 
 from schema import schema_table
+from elections import elections_table, update_proc_date
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -104,3 +105,15 @@ cursor.execute(query)
 mydb.commit()
 
 print('Database query executed.')
+
+print('Updating processed date.')
+
+# create the elections table
+query = elections_table()
+cursor.execute(query)
+mydb.commit()
+
+# update processed date
+query = update_proc_date(config['NC']['table'])
+cursor.execute(query)
+mydb.commit()
