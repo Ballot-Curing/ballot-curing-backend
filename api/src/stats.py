@@ -51,8 +51,8 @@ def stats():
     county_cured = []
 
     for row in rows:
-        county_reject.append({"name" : row[1], "value" : row[4]})
-        county_cured.append({"name" : row[1], "value" : row[5]})
+        county_reject.append({"name" : row[1].title(), "value" : row[4]})
+        county_cured.append({"name" : row[1].title(), "value" : row[5]})
 
 
     ret = {
