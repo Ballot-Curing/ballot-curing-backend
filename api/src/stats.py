@@ -29,32 +29,30 @@ def stats():
 
     cursor = mydb.cursor()
 
-    query = 'SELECT * FROM test_state_stats'  
+    query = 'SELECT * FROM ' + config[state]['state_stats_table'] + " WHERE election_dt = '" + elec_dt.strftime("%y/%m/%d") + "'; "
     
     cursor.execute(query)
 
     rows = cursor.fetchall()
 
     for row in rows:
-        election_dt = row[1]
-        tot_rej = row[2]
-        tot_cured = row[3]
-        tot_acc = row[4]
+        election_dt = row[2]
+        tot_rej = row[3]
+        tot_cured = row[4]
+        break
 
-    query = 'SELECT * FROM test_county_stats'  
-    
+    query = "SELECT * FROM " + config[state]['county_stats_table'] + " WHERE election_dt = '" + elec_dt.strftime("%y/%m/%d") + "'; "
+    print("Debug: " + query)
     cursor.execute(query)
 
     rows = cursor.fetchall()
 
     county_reject = []
-    county_accepted = []
     county_cured = []
 
     for row in rows:
-        county_reject.append({"name" : row[0], "value" : row[3]})
-        county_cured.append({"name" : row[0], "value" : row[4]})
-        county_accepted.append({"name" : row[0], "value" : row[5]})
+        county_reject.append({"name" : row[1], "value" : row[4]})
+        county_cured.append({"name" : row[1], "value" : row[5]})
 
 
     ret = {
@@ -62,10 +60,8 @@ def stats():
 	    "election_dt" : election_dt.strftime("%m/%d/%Y"),
         "total_rejected" : tot_rej,
         "total_cured" : tot_cured,
-        "total_accepted" : tot_acc,
         "county_rejected" : county_reject,
         "county_cured" : county_cured,
-        "county_accepted" : county_accepted
     }
 
     return jsonify(ret)
