@@ -31,7 +31,31 @@ def get_cured(table):
     WHERE rej.ballot_rtn_status='R';
     '''
 
-# Specific queries for NC for snapshot
+def get_cured_count(election, county=None):
+    table = f'cured_{election}'
+    
+    where_clause = f'WHERE county="{county}"' if county else ''
+
+    return f'''
+    SELECT COUNT(*) AS num_cured
+    FROM {table} 
+    {where_clause};
+    '''
+
+
+def get_rej_count(election, county=None):
+    table = f'rejected_{election}'
+
+    where_clause = f'WHERE county="{county}"' if county else ''
+    
+    return f'''
+    SELECT COUNT(*) AS num_rejected
+    FROM {table}
+    {where_clause};
+    '''
+
+# State specific queries
+
 def get_cured_NC(table):
 	return f'''
 	SELECT *
@@ -45,27 +69,3 @@ def get_rejected_NC(table):
 	FROM {table}
 	WHERE ballot_rtn_status = 'R';
 	'''
-
-def get_cured_count(election, county=None):
-    table = f'cured_{election}'
-    
-    where_clause = f'WHERE county="{county}"' if county else ''
-
-    return f'''
-    SELECT COUNT(*) 
-    FROM {table} 
-    {where_clause};
-    '''
-
-
-def get_rej_count(election, county=None):
-    table = f'rejected_{election}'
-
-    where_clause = f'WHERE county="{county}"' if county else ''
-    
-    return f'''
-    SELECT COUNT(*)
-    FROM {table}
-    {where_clause};
-    '''
-

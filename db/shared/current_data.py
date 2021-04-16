@@ -12,7 +12,7 @@ def get_elections(cursor):
     
     cursor.execute(query)
     dates = cursor.fetchall()
-    elections = [date[0].strftime('%m_%d_%Y') for date in dates]
+    elections = [date['election_dt'].strftime('%m_%d_%Y') for date in dates]
 
     return elections
 

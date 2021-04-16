@@ -109,24 +109,6 @@ def schema_index(table):
 
 # Functions to create supplementary tables
 
-def create_cured_table(cured_db):
-    return f'''
-    CREATE TABLE IF NOT EXISTS {cured_db} (
-        id      INT NOT NULL AUTO INCREMENT,
-        {schema_col_names_types}
-        PRIMARY KEY(id)
-    );
-    '''
-
-def create_rejected_table(rejected_db):
-    return f'''
-    CREATE TABLE IF NOT EXISTS {rejected_db} (
-        id                      INT NOT NULL PRIMARY KEY,
-        {schema_col_names_types}
-        PRIMARY KEY(id)
-    );
-    '''
-
 def create_state_stats_table():
     return f'''
     CREATE TABLE IF NOT EXISTS state_stats (

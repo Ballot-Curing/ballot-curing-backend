@@ -22,7 +22,7 @@ for state in states:
     local_infile=1)
  
   print(f'\nConnected to {state} state database.')
-  cursor = mydb.cursor()
+  cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
   
   # create state_stats DB if not created
   cursor.execute(schema.create_state_stats_table())
@@ -45,13 +45,13 @@ for state in states:
     cursor.execute(queries.get_cured_count(election))
     output = cursor.fetchall()
     
-    tot_cured = output[0][0]
+    tot_cured = output[0]['num_cured']
 
     # query size of rejected table, if empty set to 0
     cursor.execute(queries.get_rej_count(election))
     output = cursor.fetchall()
     
-    tot_rejected = output[0][0]
+    tot_rejected = output[0]['num_rejected']
 
     # add entry in state_stats
     proc_date = date.today().strftime("%m/%d/%Y")
@@ -63,18 +63,18 @@ for state in states:
     '''
     print(f'Computing county-level statistics for\t{election}.')
     for entry in counties:
-      county = entry[0]
+      county = entry['county']
 
       # get num cured for the county
       cursor.execute(queries.get_cured_count(election, county))
       output = cursor.fetchall()
-      num_cured = output[0][0]
+      num_cured = output[0]['num_cured']
       
 
       # get num rejected for the county
       cursor.execute(queries.get_rej_count(election, county))
       output = cursor.fetchall()
-      num_rej = output[0][0]
+      num_rej = output[0]['num_rejected']
   
       proc_date = date.today().strftime("%m/%d/%Y")
 

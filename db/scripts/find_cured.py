@@ -1,65 +1,66 @@
 
 import MySQLdb
 import configparser
-import queries
 import sys
 
 from datetime import datetime, timedelta
 
+import queries
+from current_data import get_elections
+from schema import schema_table
 
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-
 # Special find_cured way for NC, since we don't have multiple days of snapshots to use classic find_cured
 def find_cured_NC(state):
-  table = config[state]['table']
-  rejected_db = "rejected_"+table
-  cured_db = "cured_"+table
   mydb = MySQLdb.connect(host=config['DATABASE']['host'],
-              user=config['DATABASE']['user'],
-              passwd=config['DATABASE']['passwd'],
-              db=config[state]['db'],
-              local_infile=1)
+    user=config['DATABASE']['user'],
+    passwd=config['DATABASE']['passwd'],
+    db=config[state]['db'],
+    local_infile=1)
+
   print("Connected to db")
 
-  cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
+  cursor = mydb.cursor()
 
-  # make cured table if not made
-  cursor.execute(queries.create_cured_table(cured_db))
+  elections = get_elections(cursor)
 
-  # make rejected table if not made
-  cursor.execute(queries.create_rejected_table(rejected_db))
+  for election in elections:
+    cured_db = f'cured_{election}'
+    rejected_db = f'rejected_{election}'
 
-  # get all cured ballots as of today
-  print("Getting all cured ballots for NC")
-  cursor.execute(queries.get_cured_NC(table))
-  output = cursor.fetchall()
+    # make cured table if not made
+    cursor.execute(schema_table(cured_db))
+
+    # make rejected table if not made
+    cursor.execute(schema_table(rejected_db))
+
+    # get all cured ballots as of today
+    print("Getting all cured ballots for NC")
+    cursor.execute(queries.get_cured_NC(election))
+    output = cursor.fetchall()
   
-  # for each cured entry, add to cured_db
-  for entry in output:
-    cursor.execute(queries.add_to_cured_NC(cured_db, entry))
-    mydb.commit()
+    # for each cured entry, add to cured_db
+    for entry in output:
+      cursor.execute(schema.add_to_cured_NC(cured_db, entry))
 
-  # get all of the rejected ballots
-  print("Getting rejected ballots from main table")
-  cursor.execute(queries.get_rejected_NC(table))
-  output = cursor.fetchall()
+    # get all of the rejected ballots
+    print("Getting rejected ballots from main table")
+    cursor.execute(queries.get_rejected_NC(election))
+    output = cursor.fetchall()
 
-  # for each rejected entry, add to rejected table
-  for entry in output:
-    cursor.execute(queries.add_to_rejected_NC(rejected_db, entry))
-    mydb.commit()
+    # for each rejected entry, add to rejected table
+    for entry in output:
+      cursor.execute(schema.add_to_rejected_NC(rejected_db, entry))
 
+  mydb.commit()
   # To close the connection
   mydb.close()
 
 
 # Adds entries to cured and rejected tables
 def find_cured(today_datetime, state):
-  table = config[state]['table']
-  rejected_db = "rejected_"+table
-  cured_db = "cured_"+table
   mydb = MySQLdb.connect(host=config['DATABASE']['host'],
               user=config['DATABASE']['user'],
               passwd=config['DATABASE']['passwd'],
@@ -67,34 +68,38 @@ def find_cured(today_datetime, state):
               local_infile=1)
   print("Connected to db")
 
-  cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
+  cursor = mydb.cursor()
 
-  # make cured table if not made
-  cursor.execute(queries.create_cured_table(cured_db))
-
-  # make rejected table if not made
-  cursor.execute(queries.create_rejected_table(rejected_db))
+  elections = get_elections(cursor)
   
-  # get all cured ballots as of today
-  print("Get all cured ballots")
-  cursor.execute(queries.get_cured(table))
-  output = cursor.fetchall()
+  for election in elections:
+  
+    cured_db = f'cured_{election}'
+    rejected_db = f'rejected_{election}'
 
-  # for each cured entry, add to cured_db
-  for entry in output:
-    cursor.execute(queries.add_to_cured(cured_db, entry))
-    mydb.commit()
+    # make cured table if not made
+    cursor.execute(schema_table(cured_db))
 
-  # query the current day for any new rejected that are not cured
-  print("Getting today's rejected ballots from main table")
-  cursor.execute(queries.get_today_rejected(table, today_datetime, cured_db))
-  output = cursor.fetchall()
+    # make rejected table if not made
+    cursor.execute(schema_table(rejected_db))
+  
+    # get all cured ballots as of today
+    print("Get all cured ballots")
+    cursor.execute(queries.get_cured(election))
+    output = cursor.fetchall()
 
-  # for each rejected entry today, add to rejected table
-  for entry in output:
-    cursor.execute(queries.add_to_rejected(
-      rejected_db, entry))
-    mydb.commit()
+    # for each cured entry, add to cured_db
+    for entry in output:
+      cursor.execute(schema.add_to_cured(cured_db, entry))
+
+    # query the current day for any new rejected that are not cured
+    print("Getting today's rejected ballots from main table")
+    cursor.execute(queries.get_today_rejected(election, today_datetime, cured_db))
+    output = cursor.fetchall()
+
+    # for each rejected entry today, add to rejected table
+    for entry in output:
+      cursor.execute(schema.add_to_rejected(rejected_db, entry))
 
   # To close the connection
   mydb.close()
