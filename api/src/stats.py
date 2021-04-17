@@ -11,8 +11,8 @@ from datetime import datetime
 stats_bp = Blueprint('stats',__name__)
 
 config = configparser.ConfigParser()
-# input path to config file
-config.read('../../config.ini')
+if not config.read('../../config.ini'):
+    raise Exception('config.ini not in current directory. Please run again from top-level directory.')
 
 @stats_bp.route('/', methods=['GET'])
 def stats():
@@ -27,41 +27,53 @@ def stats():
         db=config[state]['db'], 
         local_infile = 1)
 
-    cursor = mydb.cursor()
+    cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
-    query = 'SELECT * FROM ' + config[state]['state_stats_table'] + " WHERE election_dt = '" + elec_dt.strftime("%y/%m/%d") + "'; "
+    # query to get statewide stats
+    query = f'''
+    SELECT *
+    FROM state_stats
+    WHERE election_dt = '{elec_dt.strftime("%y/%m/%d")}';
+    '''
     
     cursor.execute(query)
 
     rows = cursor.fetchall()
 
     for row in rows:
-        election_dt = row[2]
-        tot_rej = row[3]
-        tot_cured = row[4]
+        election_dt = row['election_dt']
+        tot_rej = row['tot_rejected']
+        tot_cured = row['tot_cured']
+        tot_processed = row['tot_processed']
         break
 
-    query = "SELECT * FROM " + config[state]['county_stats_table'] + " WHERE election_dt = '" + elec_dt.strftime("%y/%m/%d") + "'; "
-    print("Debug: " + query)
+    query = f'''
+    SELECT *
+    FROM county_stats
+    WHERE election_dt = '{elec_dt.strftime("%y/%m/%d")}';
+    '''
     cursor.execute(query)
 
     rows = cursor.fetchall()
 
     county_reject = []
     county_cured = []
+    county_processed = []
 
     for row in rows:
-        county_reject.append({"name" : row[1].title(), "value" : row[4]})
-        county_cured.append({"name" : row[1].title(), "value" : row[5]})
+        county_reject.append({"name" : row['county'].title(), "value" : row['tot_rejected']})
+        county_cured.append({"name" : row['county'].title(), "value" : row['tot_cured']})
+        county_processed.append({"name" : row['county'].title(), "value" : row['tot_processed']})
 
 
     ret = {
-        "state" : "GA",
+        "state" : state,
 	    "election_dt" : election_dt.strftime("%m/%d/%Y"),
         "total_rejected" : tot_rej,
         "total_cured" : tot_cured,
         "county_rejected" : county_reject,
         "county_cured" : county_cured,
+        "county_processed" : county_processed
     }
 
     response = jsonify(ret)
