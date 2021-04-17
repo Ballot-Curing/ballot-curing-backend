@@ -1,8 +1,11 @@
 import MySQLdb
 import configparser
 import sys
+import json
+import logging, logging.config
 
 from datetime import datetime, timedelta, date
+from time import time
 
 import schema
 import queries
@@ -10,7 +13,11 @@ from current_data import cur_states as states, get_elections
 
 config = configparser.ConfigParser()
 if not config.read('config.ini'):
-    raise Exception('config.ini not in current directory. Please run again from top-level directory.')
+  raise Exception('config.ini not in current directory. Please run again from top-level directory.')
+
+logging.config.fileConfig(fname='log_config.ini')
+
+logger = logging.getLogger('dev')
 
 for state in states:
   # connect to DB
@@ -21,7 +28,7 @@ for state in states:
     db=config[state]['db'],
     local_infile=1)
  
-  print(f'\nConnected to {state} state database.')
+  logger.info(f'Connected to {state} state database.')
   cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
   
   # create state_stats DB if not created
@@ -40,45 +47,88 @@ for state in states:
     '''
     State-level statistics
     '''
-    print(f'Computing state-level statistics for\t{election}.')
-    # query size of cured table, if empty set to 0
+    logger.info(f'Computing state-level statistics for {election}.')
+    t0 = time()
+
+    cursor.execute(queries.get_processed_count(election))
+    tot_processed = cursor.fetchall()[0]['num_processed']
+
     cursor.execute(queries.get_cured_count(election))
-    output = cursor.fetchall()
-    
-    tot_cured = output[0]['num_cured']
+    tot_cured = cursor.fetchall()[0]['num_cured']
 
-    # query size of rejected table, if empty set to 0
     cursor.execute(queries.get_rej_count(election))
-    output = cursor.fetchall()
+    tot_rejected = cursor.fetchall()[0]['num_rejected']
+
+    logger.debug(f'proc, cured, rej done @ {time() - t0:.2f}s')
+
+    cursor.execute(queries.get_gender_count(election))
+    gender_rej = json.dumps(str(cursor.fetchall()))
+
+    logger.debug(f'gender done @ {time() - t0:.2f}s')
+
+    cursor.execute(queries.get_race_count(election))
+    race_rej = json.dumps(str(cursor.fetchall()))
+
+    logger.debug(f'race done @ {time() - t0:.2f}s')
     
-    tot_rejected = output[0]['num_rejected']
+    cursor.execute(queries.get_age_count(election))
+    age_rej = json.dumps(str(cursor.fetchall()))
 
+    logger.debug(f'age done @ {time() - t0:.2f}s')
+    
+    cursor.execute(queries.get_rej_reasons(election))
+    reasons = json.dumps(str(cursor.fetchall()))
+
+    logger.debug(f'reasons done @ {time() - t0:.2f}s')
+    
     # add entry in state_stats
-    proc_date = date.today().strftime("%m/%d/%Y")
+    proc_date = date.today()
+    election_dt = datetime.strptime(election, '%m_%d_%Y')
 
-    cursor.execute(schema.add_state_stat(proc_date, election, tot_rejected, tot_cured))
+    query = schema.add_state_stat()
+    cursor.execute(query, (proc_date, election_dt, tot_processed, tot_cured, tot_rejected,
+      gender_rej, race_rej, age_rej, reasons))
 
+    logger.debug(f'Total time for state-level statistics: {time() - t0:.2f}s')
+    
     '''
     County-level statistics
     '''
-    print(f'Computing county-level statistics for\t{election}.')
+    logger.info(f'Computing county-level statistics for {election}.')
+    t0 = time()
+
     for entry in counties:
       county = entry['county']
 
-      # get num cured for the county
+      cursor.execute(queries.get_processed_count(election, county))
+      tot_processed = cursor.fetchall()[0]['num_processed']
+
       cursor.execute(queries.get_cured_count(election, county))
-      output = cursor.fetchall()
-      num_cured = output[0]['num_cured']
-      
+      tot_cured = cursor.fetchall()[0]['num_cured']
 
-      # get num rejected for the county
       cursor.execute(queries.get_rej_count(election, county))
-      output = cursor.fetchall()
-      num_rej = output[0]['num_rejected']
-  
-      proc_date = date.today().strftime("%m/%d/%Y")
+      tot_rejected = cursor.fetchall()[0]['num_rejected']
 
-      cursor.execute(schema.add_county_stat(county, proc_date, election, num_rej, num_cured))
+      cursor.execute(queries.get_gender_count(election, county))
+      gender_rej = json.dumps(str(cursor.fetchall()))
+
+      cursor.execute(queries.get_race_count(election, county))
+      race_rej = json.dumps(str(cursor.fetchall()))
+
+      cursor.execute(queries.get_age_count(election, county))
+      age_rej = json.dumps(str(cursor.fetchall()))
+
+      cursor.execute(queries.get_rej_reasons(election, county))
+      reasons = json.dumps(str(cursor.fetchall()))
+
+      proc_date = date.today()
+      election_dt = datetime.strptime(election, '%m_%d_%Y') 
+
+      query = schema.add_county_stat()
+      cursor.execute(query, (county, proc_date, election_dt, tot_processed, tot_cured, tot_rejected,
+        gender_rej, race_rej, age_rej, reasons))
+      
+    logger.debug(f'Total time for county-level statistics: {time() - t0:.2f}s')
     
   mydb.commit()
   # close the connection

@@ -63,23 +63,13 @@ schema_col_names_types = '''
 stat_col_names_types = '''
 	proc_date               DATETIME,
 	election_dt             DATETIME,
-	tot_rejected            INT,
+        tot_processed           INT,
 	tot_cured               INT,
-        gender_m_rej            INT,
-        gender_f_rej            INT,
-        gender_x_rej            INT,
-        race_asian_rej          INT,
-        race_black_rej          INT,
-        race_latino_rej         INT,
-        race_white_rej          INT,
-        age_18_29_rej           INT,
-        age_30_44_rej           INT,
-        age_45_64_rej           INT,
-        age_65_plus_rej         INT,
-        bal_after_deadline      INT,
-        bal_invalid_sig         INT,
-        bal_missing_sig         INT,
-        bal_ineligible          INT,         
+	tot_rejected            INT,
+        gender_rej              JSON,
+        race_rej                JSON,
+        age_rej                 JSON,
+        rej_reason              JSON,         
 '''
 
 # General schema creation functions
@@ -183,27 +173,16 @@ def add_to_rejected_NC(rejected_db, entry):
     );
 '''
 
-def add_state_stat(proc_date, election, tot_rejected, tot_cured):
-    return f'''
-    INSERT IGNORE INTO state_stats (proc_date, election_dt, tot_rejected, tot_cured) 
-    VALUES (
-        STR_TO_DATE("{proc_date}",'%m/%d/%Y'), 
-        STR_TO_DATE("{election}",'%m_%d_%Y'), 
-        {tot_rejected},
-        {tot_cured}
-    );
+def add_state_stat():
+    return '''
+    INSERT IGNORE INTO state_stats 
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
     '''
 
-def add_county_stat(county, proc_date, election_dt, tot_rejected, tot_cured):
-    return f'''
-    INSERT IGNORE INTO county_stats (county, proc_date, election_dt, tot_rejected, tot_cured) 
-    VALUES (
-        "{county}", 
-        STR_TO_DATE('{proc_date}','%m/%d/%Y'), 
-        STR_TO_DATE("{election_dt}",'%m_%d_%Y'), 
-        {tot_rejected}, 
-        {tot_cured}
-    );
+def add_county_stat():
+    return '''
+    INSERT IGNORE INTO county_stats
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
     '''
 
 # State-specific functions
