@@ -13,6 +13,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
 
 from schema import schema_table, ga_load
+from elections import elections_table, update_proc_date
 
 config = configparser.ConfigParser()
 if not config.read('config.ini'):
@@ -119,3 +120,14 @@ mydb.commit()
 
 print('Database insertion executed.')
 print(f'Total time: {time.time() - start_time} seconds')
+
+print('Updating processed date.')
+# create the elections table
+query = elections_table()
+cursor.execute(query)
+mydb.commit()
+
+# update processed date
+query = update_proc_date(config['GA']['table'])
+cursor.execute(query)
+mydb.commit()

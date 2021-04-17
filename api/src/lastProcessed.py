@@ -1,6 +1,7 @@
 from flask import Blueprint
 from flask import request
 from flask import jsonify
+from flask import abort
 import MySQLdb
 import configparser
 from datetime import datetime
@@ -10,18 +11,12 @@ lastProcessed_bp = Blueprint('lastProcessed', __name__)
 @lastProcessed_bp.route('/')
 def lastProcessed():
 
-    # get state parameter
-    if 'state' in request.args:
-        state = request.args['state']
-        state = state.lower()
-    else:
-        return "ERROR: No state specified"
-
-    # get election_dt parameter
-    if 'election_dt' in request.args:
-        election_dt = datetime.strptime(request.args['election_dt'], '%m/%d/%y')
-    else:
-        return "ERROR: No election date provided"
+    # get state/election_dt parameters
+    try:
+        state = request.args['state'].upper()
+        election_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
+    except:
+        abort(404, description="Resource not found")
 
     # parse the config file
     config = configparser.ConfigParser()
@@ -29,19 +24,29 @@ def lastProcessed():
         raise Exception('config.ini not in current directory. Please run again from top-level directory.')
 
     # connect to the database
-    mydb = MySQLdb.connect(host=config['DATABASE']['host'],
-        user=config['DATABASE']['user'],
-        passwd=config['DATABASE']['passwd'],
-        db="vote_"+state, 
-        local_infile = 1)
+    try:
+        mydb = MySQLdb.connect(host=config['DATABASE']['host'],
+            user=config['DATABASE']['user'],
+            passwd=config['DATABASE']['passwd'],
+            db=config[state]['db'], 
+            local_infile = 1)
+    except:
+        abort(500, description="internal service failure")
 
     # run query to get processed date for that election
     cursor = mydb.cursor()
-    query = " SELECT processed FROM processed WHERE election = ' " + election_dt.strftime("%y/%m/%d") + " '; "
-    cursor.execute(query)
+    query = " SELECT proc_date FROM elections WHERE election_dt = '" + election_dt.strftime("%y/%m/%d") + "'; "
+    print("debug: " + query)
+    try:
+        cursor.execute(query)
+    except:
+        abort(500, description="internal service failure")
 
     # get result (note should only be one row since only one matching election)
     output = cursor.fetchall()
+    # if no result, then input date was invalid
+    if len(output) == 0:
+        abort(404, description="Resource not found")
     for row in output:
         result = row[0]
 
@@ -52,5 +57,7 @@ def lastProcessed():
         "last_proc" : result.strftime("%m/%d/%Y")
     }
 
-    return jsonify(ret_dict)
+    response = jsonify(ret_dict)
+    response.headers.add('Access-Control-Allow-Origin', '*')
 
+    return response

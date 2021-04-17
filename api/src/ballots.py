@@ -5,6 +5,7 @@ from datetime import datetime
 from flask import Blueprint
 from flask import jsonify
 from flask import request as req
+from flask import abort
 
 from schema import schema_col_names
 
@@ -18,8 +19,11 @@ config.read('/home/cs310_prj3/Ballot-Curing-Project/config.ini')
 def ballots():
  
   # required parameters - throws error if not present
-  state = req.args['state'].upper()
-  elec_dt = datetime.strptime(req.args['election_dt'], '%m-%d-%Y')
+  try:
+    state = req.args['state'].upper()
+    elec_dt = datetime.strptime(req.args['election_dt'], '%m-%d-%Y')
+  except:
+    abort(404, description="Resource not found")
  
   # build WHERE clause for optional parameters on the fly for optimized SQL query times
   where_clause = ''
@@ -46,11 +50,15 @@ def ballots():
   # TODO support historic data requests - run query on `rejected` table, otherwise run on main table
   historic = req.args.get('show_historic', False)
 
-  mydb = MySQLdb.connect(host=config['DATABASE']['host'],
-    user=config['DATABASE']['user'],
-    passwd=config['DATABASE']['passwd'],
-    db=config[state]['db'],
-    local_infile = 1)
+  try:
+    mydb = MySQLdb.connect(host=config['DATABASE']['host'],
+      user=config['DATABASE']['user'],
+      passwd=config['DATABASE']['passwd'],
+      db=config[state]['db'],
+      local_infile = 1)
+  except:
+    # if connection failed, then input state was not valid
+    abort(500, description="internal service failure")
   
   cur = mydb.cursor()
 
@@ -65,7 +73,11 @@ def ballots():
 
   print(f'DEBUG:\n{query}')
 
-  cur.execute(query)
+  try:
+    cur.execute(query)
+  except:
+    # if valid, then election_dt not valid
+    abort(500, description="internal service failure")
 
   # attach row headers, remove ID, return json
   row_headers = [x[0] for x in cur.description]
