@@ -237,7 +237,6 @@ def process_json(response):
     response = response.replace(')', "]")
     response = response.replace("'", '"')
     response = response.replace("None", "0")
-    print(response)
     response = json.loads(response)
     return response
 
@@ -249,5 +248,4 @@ def process_race_json(response):
     response = response.replace("'", '"') 
     response = response.replace(', {"race": ""UNDESIGNATED", "race_count": 2}', "") # TODO: Add 2 to the normal undesignated count to account for this
     response = response.replace(', {"race": ""UNDESIGNATED", "race_count": 1}', "")
-    print(response)
     return json.loads(response)
