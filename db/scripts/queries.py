@@ -81,10 +81,10 @@ def get_age_count(election, county=None):
 
     return f'''
     SELECT
-    SUM(IF(age BETWEEN 18 AND 29,1,0)) as '18-29',
-    SUM(IF(age BETWEEN 30 AND 44,1,0)) as '30-44',
-    SUM(IF(age BETWEEN 45 AND 64,1,0)) as '45-64',
-    SUM(IF(age BETWEEN 65 and 119,1,0)) as '65-119'
+    CONVERT(SUM(IF(age BETWEEN 18 AND 29,1,0)), CHAR) AS '18-29',
+    CONVERT(SUM(IF(age BETWEEN 30 AND 44,1,0)), CHAR) AS '30-44',
+    CONVERT(SUM(IF(age BETWEEN 45 AND 64,1,0)), CHAR) AS '45-64',
+    CONVERT(SUM(IF(age BETWEEN 65 and 119,1,0)), CHAR) AS '65-119'
     FROM (
         SELECT voter_reg_id, age
         FROM {election}

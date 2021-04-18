@@ -66,10 +66,16 @@ stat_col_names_types = '''
         tot_processed           INT,
 	tot_cured               INT,
 	tot_rejected            INT,
-        gender_rej              JSON,
-        race_rej                JSON,
-        age_rej                 JSON,
         rej_reason              JSON,         
+        gender_tot              JSON,
+        gender_cured            JSON,
+        gender_rej              JSON,
+        race_tot                JSON,
+        race_cured              JSON,
+        race_rej                JSON,
+        age_tot                 JSON,
+        age_cured               JSON,
+        age_rej                 JSON,
 '''
 
 # General schema creation functions
@@ -176,13 +182,13 @@ def add_to_rejected_NC(rejected_db, entry):
 def add_state_stat():
     return '''
     INSERT IGNORE INTO state_stats 
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
     '''
 
 def add_county_stat():
     return '''
     INSERT IGNORE INTO county_stats
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
     '''
 
 # State-specific functions
