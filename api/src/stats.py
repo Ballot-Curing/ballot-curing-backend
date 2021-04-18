@@ -12,11 +12,11 @@ from datetime import datetime
 stats_bp = Blueprint('stats',__name__)
 
 config = configparser.ConfigParser()
-if not config.read('../../config.ini'):
+if not config.read('config.ini'):
     raise Exception('config.ini not in current directory. Please run again from top-level directory.')
 
 @stats_bp.route('/', methods=['GET'])
-def stats():
+def state_stats():
     # get required params
     state = request.args['state'].upper()
     elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
@@ -47,63 +47,30 @@ def stats():
     tot_cured = row['tot_cured']
     tot_processed = row['tot_processed']
 
-    # string parsing to convert gender_rej into the right form
-    gender_rej = json.loads(row['gender_rej'])
-    gender_rej = process_string(gender_rej)
-
-    # string parsing to convert race_rej into the right form
-    race_rej = json.loads(row['race_rej'])
-    race_rej = race_rej.replace('(', "[")
-    race_rej = race_rej.replace(')', "]")
-    race_rej = race_rej.replace("'", '"') 
-    race_rej = race_rej.replace(', {"race": ""UNDESIGNATED", "race_count": 2}', "") # TODO: Add 2 to the normal undesignated count to account for this
-    race_rej = json.loads(race_rej)
-
-    # converts age_rej into the correct form
-    age_rej = json.loads(row['age_rej'])
-    age_rej = age_rej.replace("Decimal('", "")
-    age_rej = age_rej.replace("')", "")
-    age_rej = age_rej.replace("},)", "})")
-    age_rej = age_rej.replace('(', "[")
-    age_rej = age_rej.replace(')', "]")
-    age_rej = age_rej.replace("'", '"')
-    age_rej = json.loads(age_rej)
-
     # string parsing to convert rej_reason into the right form
     rej_reason = json.loads(row['rej_reason'])
-    rej_reason = process_string(rej_reason) # can use general method as no special cases
+    rej_reason = process_json(rej_reason) 
 
-    query = f'''
-    SELECT *
-    FROM county_stats
-    WHERE election_dt = '{elec_dt.strftime("%y/%m/%d")}';
-    '''
-    cursor.execute(query)
+    # get demographic stats
+    demo_stats = get_demographics(state, row)
 
-    rows = cursor.fetchall()
-
-    county_reject = []
-    county_cured = []
-    county_processed = []
-
-    for row in rows:
-        county_reject.append({"name" : row['county'].title(), "value" : row['tot_rejected']})
-        county_cured.append({"name" : row['county'].title(), "value" : row['tot_cured']})
-        county_processed.append({"name" : row['county'].title(), "value" : row['tot_processed']})
-
-
+    # builds dictionary manually due to the processing that was needed
     ret = {
         "state" : state,
 	    "election_dt" : election_dt.strftime("%m/%d/%Y"),
         "total_rejected" : tot_rej,
         "total_cured" : tot_cured,
-        "rejected_gender" : gender_rej,
-        "rejected_race" : race_rej,
-        "rejected_age_group" : age_rej,
+        "total_processed" : tot_processed,
+        "rejected_gender" : demo_stats['gender_rej'],
+        "cured_gender" : demo_stats['gender_cur'],
+        "total_gender" : demo_stats['gender_tot'],
+        "rejected_race" : demo_stats['race_rej'],
+        "cured_race" : demo_stats['race_cur'],
+        "total_race" : demo_stats['race_tot'],
+        "rejected_age_group" : demo_stats['age_rej'],
+        "cured_age_group" : demo_stats['age_cur'],
+        "total_age_group" : demo_stats['age_tot'],
         "ballot_issue_count" : rej_reason,
-        "county_rejected" : county_reject,
-        "county_cured" : county_cured,
-        "county_processed" : county_processed
     }
 
     response = jsonify(ret)
@@ -111,10 +78,168 @@ def stats():
 
     return response
 
+@stats_bp.route('/county_stats/', methods=['GET'])
+def county_stats():
+
+    # get required params
+    state = request.args['state'].upper()
+    elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
+
+    # connect to the database
+    mydb = MySQLdb.connect(host=config['DATABASE']['host'],
+        user=config['DATABASE']['user'],
+        passwd=config['DATABASE']['passwd'],
+        db=config[state]['db'], 
+        local_infile = 1)
+
+    cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
+
+    # run query
+    query = f'''
+    SELECT *
+    FROM county_stats
+    WHERE election_dt = '{elec_dt.strftime("%y/%m/%d")}';
+    '''
+
+    return get_county_data(cursor, query, state, elec_dt)
+
+@stats_bp.route('/county_stats/<county>', methods=['GET'])
+def single_county_stats(county):
+    # get required params
+    state = request.args['state'].upper()
+    elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
+
+    # connect to the database
+    mydb = MySQLdb.connect(host=config['DATABASE']['host'],
+        user=config['DATABASE']['user'],
+        passwd=config['DATABASE']['passwd'],
+        db=config[state]['db'], 
+        local_infile = 1)
+
+    cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
+
+    # run query
+    query = f'''
+    SELECT *
+    FROM county_stats
+    WHERE (election_dt = '{elec_dt.strftime("%y/%m/%d")}'
+    AND county = "{county}");
+    '''
+
+    return get_county_data(cursor, query, state, elec_dt)
+
+def get_county_data(cursor, query, state, elec_dt):
+    cursor.execute(query)
+
+    rows = cursor.fetchall()
+
+    county_data = []
+
+    # parse each counties data
+    for row in rows:   
+        # string parsing to convert rej_reason into the right form
+        rej_reason = json.loads(row['rej_reason'])
+        rej_reason = process_json(rej_reason) 
+
+        # get demographic stats
+        demo_stats = get_demographics(state, row) 
+
+        # build county entry and put it in the list
+        county_stats = {
+            "county" : row['county'],
+            "election_dt" : elec_dt.strftime("%m/%d/%Y"),
+            "total_rejected" : row['tot_rejected'],
+            "total_cured" : row['tot_cured'],
+            "total_processed" : row['tot_processed'],
+            "rejected_gender" : demo_stats['gender_rej'],
+            "cured_gender" : demo_stats['gender_cur'],
+            "total_gender" : demo_stats['gender_tot'],
+            "rejected_race" : demo_stats['race_rej'],
+            "cured_race" : demo_stats['race_cur'],
+            "total_race" : demo_stats['race_tot'],
+            "rejected_age_group" : demo_stats['age_rej'],
+            "cured_age_group" : demo_stats['age_cur'],
+            "total_age_group" : demo_stats['age_tot'],
+            "ballot_issue_count" : rej_reason,
+        }
+
+        county_data.append(county_stats)
+
+    # build final output
+    ret_dict = {
+        "state" : state,
+        "election_dt" : elec_dt.strftime("%m/%d/%Y"),
+        "county_data" : county_data
+    }
+
+    return jsonify(ret_dict)
+
+# method to get the demographic info from the mysql row
+def get_demographics(state, row):
+
+    ret_dict = {}
+
+    # GA doesn't support these stats so should be null for Georgia
+    if (state != "GA"):
+        # string parsing to convert gender stats into the right form
+        gender_rej = json.loads(row['gender_rej'])
+        ret_dict['gender_rej'] = process_json(gender_rej)
+
+        gender_cur = json.loads(row['gender_cured'])
+        ret_dict['gender_cur'] = process_json(gender_cur)
+
+        gender_tot = json.loads(row['gender_tot'])
+        ret_dict['gender_tot'] = process_json(gender_tot)
+
+        # string parsing to convert race stats into the right form
+        race_rej = json.loads(row['race_rej'])
+        ret_dict['race_rej'] = process_race_json(race_rej)
+
+        race_cur = json.loads(row['race_cured'])
+        ret_dict['race_cur'] = process_race_json(race_cur)
+
+        race_tot = json.loads(row['race_tot'])
+        ret_dict['race_tot'] = process_race_json(race_tot)
+
+        # string parsing to convert age stats into right form
+        age_rej = eval(row['age_rej'])
+        ret_dict['age_rej'] = process_json(age_rej)
+
+        age_cur = json.loads(row['age_cured'])
+        ret_dict['age_cur'] = process_json(age_cur)
+
+        age_tot = json.loads(row['age_tot'])
+        ret_dict['age_tot'] = process_json(age_tot)
+    else:
+        # everything is null in the case of Georgia
+        ret_dict['gender_rej'] = 'null'
+        ret_dict['gender_cur'] = 'null'
+        ret_dict['gender_tot'] = 'null'
+        ret_dict['race_rej'] = 'null'
+        ret_dict['race_cur'] = 'null'
+        ret_dict['race_tot'] = 'null'
+        ret_dict['age_rej'] = 'null'
+        ret_dict['age_cur'] = 'null'
+        ret_dict['age_tot'] = 'null'
+
+    return ret_dict
+
 # method to process a json response from sql to valid json form 
-def process_string(response):
+def process_json(response):
+    response = response.replace("},)", "})") # note this isn't in every json string just some of them
     response = response.replace('(', "[")
     response = response.replace(')', "]")
     response = response.replace("'", '"')
+    response = response.replace("None", "0")
+    print(response)
     response = json.loads(response)
     return response
+
+# special method to process the race stats as there are special cases
+def process_race_json(response):
+    response = response.replace("},)", "})")
+    response = response.replace('(', "[")
+    response = response.replace(')', "]")
+    response = response.replace("'", '"') 
+    response = response.replace(', {"race": ""UNDESIGNATED", "race_count": 2}', "") # TODO: Add 2 to the normal undesignated count to account for this
+    return json.loads(response)
