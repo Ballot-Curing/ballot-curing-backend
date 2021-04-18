@@ -101,7 +101,10 @@ def county_stats():
     WHERE election_dt = '{elec_dt.strftime("%y/%m/%d")}';
     '''
 
-    return get_county_data(cursor, query, state, elec_dt)
+    response = get_county_data(cursor, query, state, elec_dt)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return response
 
 @stats_bp.route('/county_stats/<county>', methods=['GET'])
 def single_county_stats(county):
@@ -126,7 +129,10 @@ def single_county_stats(county):
     AND county = "{county}");
     '''
 
-    return get_county_data(cursor, query, state, elec_dt)
+    response = get_county_data(cursor, query, state, elec_dt)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return response
 
 def get_county_data(cursor, query, state, elec_dt):
     cursor.execute(query)
@@ -242,4 +248,6 @@ def process_race_json(response):
     response = response.replace(')', "]")
     response = response.replace("'", '"') 
     response = response.replace(', {"race": ""UNDESIGNATED", "race_count": 2}', "") # TODO: Add 2 to the normal undesignated count to account for this
+    response = response.replace(', {"race": ""UNDESIGNATED", "race_count": 1}', "")
+    print(response)
     return json.loads(response)
