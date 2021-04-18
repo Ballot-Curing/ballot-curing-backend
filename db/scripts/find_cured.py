@@ -54,7 +54,9 @@ def find_cured_NC(state):
     for entry in output:
       cursor.execute(schema.add_to_rejected_NC(rejected_db, entry))
 
-  mydb.commit()
+    # commit changes to db when done with election
+    mydb.commit()
+  
   # To close the connection
   mydb.close()
 
@@ -100,6 +102,9 @@ def find_cured(today_datetime, state):
     # for each rejected entry today, add to rejected table
     for entry in output:
       cursor.execute(schema.add_to_rejected(rejected_db, entry))
+
+    # commit changes to db when done with election
+    mydb.commit()
 
   # To close the connection
   mydb.close()
