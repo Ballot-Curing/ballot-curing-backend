@@ -12,7 +12,7 @@ from selenium.webdriver import ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
 
-from ../schema/schema import schema_table, schema_index
+from schema import schema_table, schema_index
 
 config = configparser.ConfigParser()
 config.read('config.ini')

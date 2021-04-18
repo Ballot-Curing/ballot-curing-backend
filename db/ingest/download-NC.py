@@ -11,7 +11,8 @@ from schema import schema_table
 from elections import elections_table, update_proc_date
 
 config = configparser.ConfigParser()
-config.read('config.ini')
+if not config.read('config.ini'):
+    raise Exception('config.ini not in current directory. Please run again from top-level directory.')
 
 # url of zip and target zip name
 url = config['NC']['url']
