@@ -88,6 +88,8 @@ def ballots():
   
   data = []
   
+  data.append({'row_count': len(rows)})
+
   for row in rows:
     mod_row = list(row)
     mod_row.pop(id_idx)
