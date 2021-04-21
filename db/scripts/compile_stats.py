@@ -1,5 +1,4 @@
 import MySQLdb
-import configparser
 import sys
 import json
 import logging, logging.config
@@ -9,11 +8,11 @@ from time import time
 
 import schema
 import queries
-from current_data import cur_states as states, get_elections
 
-config = configparser.ConfigParser()
-if not config.read('config.ini'):
-    raise Exception('config.ini not in current directory. Please run again from top-level directory.')
+from current_data import cur_states as states, get_elections
+from config import load_config
+
+config = load_config()
 
 logging.config.fileConfig(fname='log_config.ini')
 

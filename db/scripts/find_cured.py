@@ -1,6 +1,4 @@
-
 import MySQLdb
-import configparser
 import sys
 
 from datetime import datetime, timedelta
@@ -8,9 +6,9 @@ from datetime import datetime, timedelta
 import queries
 from current_data import get_elections
 from schema import schema_table
+from config import load_config
 
-config = configparser.ConfigParser()
-config.read('config.ini')
+config = load_config()
 
 # Special find_cured way for NC, since we don't have multiple days of snapshots to use classic find_cured
 def find_cured_NC(state):

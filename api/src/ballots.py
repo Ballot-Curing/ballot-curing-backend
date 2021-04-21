@@ -1,5 +1,4 @@
 import MySQLdb
-import configparser
 
 from datetime import datetime
 from flask import Blueprint
@@ -8,12 +7,11 @@ from flask import request as req
 from flask import abort
 
 from schema import schema_col_names
+from config import load_config
 
 ballots_bp = Blueprint('ballots', __name__)
 
-config = configparser.ConfigParser()
-# input path to config file
-config.read('/home/cs310_prj3/Ballot-Curing-Project/config.ini')
+config = load_config()
 
 @ballots_bp.route('/', methods=['GET'])
 def ballots():

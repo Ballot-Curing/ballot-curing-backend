@@ -1,7 +1,6 @@
 import os
 import shutil
 import sys
-import configparser
 import time
 import zipfile
 import MySQLdb
@@ -13,9 +12,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
 
 from schema import schema_table, schema_index
+from config import load_config
 
-config = configparser.ConfigParser()
-config.read('config.ini')
+config = load_config()
 
 mydb = MySQLdb.connect(host=config['DATABASE']['host'],
     user=config['DATABASE']['user'],

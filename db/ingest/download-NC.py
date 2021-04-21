@@ -1,7 +1,6 @@
 import requests
 import zipfile
 import os
-import configparser
 import MySQLdb
 import time
 
@@ -9,10 +8,9 @@ from datetime import date
 
 from schema import schema_table
 from elections import elections_table, update_proc_date
+from config import load_config
 
-config = configparser.ConfigParser()
-if not config.read('config.ini'):
-    raise Exception('config.ini not in current directory. Please run again from top-level directory.')
+config = load_config()
 
 # url of zip and target zip name
 url = config['NC']['url']

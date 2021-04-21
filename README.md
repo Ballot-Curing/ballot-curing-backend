@@ -9,10 +9,12 @@ Flask API endpoints are in `api/`.
 State ingest programs, daily querying programs, and ballot statistics programs are in `db/`.
 
 ## Configuration
-Make sure top-level directory and `db/shared` are in your PYTHONPATH e.g.
+The `BALLOT_CURING_PATH` and `PYTHONPATH` environment variables must be set.
 
 ```
-export PYTHONPATH=$PYTHONPATH:/path/to/Ballot-Curing-Project:/path/to/Ballot-Curing-Project/db/shared
+cd Ballot-Curing-Project/
+export BALLOT_CURING_PATH=$PWD
+export PYTHONPATH=$PYTHONPATH:$PWD:$PWD/db/shared
 ```
 
 Set up variables for state configurations in `config.ini`. A sample configuration is provided.

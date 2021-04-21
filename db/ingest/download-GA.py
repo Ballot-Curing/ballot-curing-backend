@@ -1,7 +1,6 @@
 import os
 import sys
 import shutil
-import configparser
 import time
 import zipfile
 import MySQLdb
@@ -14,10 +13,9 @@ from selenium.webdriver.support.select import Select
 
 from schema import schema_table, ga_load
 from elections import elections_table, update_proc_date
+from config import load_config
 
-config = configparser.ConfigParser()
-if not config.read('config.ini'):
-    raise Exception('config.ini not in current directory. Please run again from top-level directory.')
+config = load_config()
 
 year = config['GA']['year']
 name = config['GA']['name']
@@ -65,7 +63,7 @@ filename = config['GA']['filename']
 download_path = config['SYSTEM']['download_dir']
 
 file_path = os.path.join(download_path, filename)
-timeout = config.getint('GA', 'Timeout')
+timeout = int(config['GA']['Timeout'])
 count = 0
 
 while not os.path.exists(file_path):

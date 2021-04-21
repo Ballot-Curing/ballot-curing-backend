@@ -1,12 +1,16 @@
+import MySQLdb
+
 from flask import Blueprint
 from flask import request
 from flask import jsonify
 from flask import abort
-import MySQLdb
-import configparser
 from datetime import datetime
 
+from config import load_config
+
 lastProcessed_bp = Blueprint('lastProcessed', __name__)
+
+config = load_config()
 
 @lastProcessed_bp.route('/')
 def lastProcessed():
@@ -18,10 +22,6 @@ def lastProcessed():
     except:
         abort(404, description="Resource not found")
 
-    # parse the config file
-    config = configparser.ConfigParser()
-    if not config.read('config.ini'):
-        raise Exception('config.ini not in current directory. Please run again from top-level directory.')
 
     # connect to the database
     try:

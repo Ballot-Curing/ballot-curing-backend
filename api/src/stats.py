@@ -1,24 +1,17 @@
 import MySQLdb
-import configparser
 import json
-import os
 
 from flask import Blueprint
 from flask import abort
 from flask import jsonify
 from flask import request
-
 from datetime import datetime
+
+from config import load_config
 
 stats_bp = Blueprint('stats',__name__)
 
-cur_dir = os.path.dirname(os.path.abspath(__file__))
-config_file = os.path.join(cur_dir, '..', '..', 'config.ini')
-
-config = configparser.ConfigParser()
-
-if not config.read(config_file):
-    raise Exception(f'config.ini not found in {config_file}. Please run again from src/.')
+config = load_config()
 
 @stats_bp.route('/', methods=['GET'])
 def state_stats():
