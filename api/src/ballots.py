@@ -41,9 +41,8 @@ def ballots():
   # remove last AND
   where_clause = where_clause[:-5]
 
-
-  limit = int(req.args.get('limit', 10))
-  limit_clause = f'LIMIT {limit}' if limit != -1 else ''
+  limit = int(req.args.get('limit', 0))
+  limit_clause = f'LIMIT {limit}' if limit else ''
 
   # TODO support historic data requests - run query on `rejected` table, otherwise run on main table
   historic = req.args.get('show_historic', False)
@@ -88,14 +87,20 @@ def ballots():
   
   data.append({'row_count': len(rows)})
 
+  ret_count = 0
+
+  # only return 10 entries - full query sent from downloads endpoint
   for row in rows:
     mod_row = list(row)
     mod_row.pop(id_idx)
     data.append(dict(zip(row_headers, mod_row)))
 
+    ret_count += 1
+    if ret_count == 10:
+        break
+
   response = jsonify(data)
   response.headers.add('Access-Control-Allow-Origin', '*')
 
   return response
-
 
