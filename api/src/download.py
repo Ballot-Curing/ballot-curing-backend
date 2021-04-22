@@ -4,6 +4,7 @@ import csv
 from flask import Blueprint
 from flask import request as req
 from flask import abort
+from flask import send_file
 
 from datetime import datetime
 
@@ -77,11 +78,24 @@ def download():
         # if valid, then election_dt not valid
         abort(500, description="internal service failure")
 
+    # get the row headers
+    row_headers = [x[0] for x in cur.description]
+    id_idx = row_headers.index('id')
+    row_headers.pop(id_idx)    
+
+    # get the file name
     filename = f"./output/votes_{datetime.now().strftime('%d_%m_%y_%H_%M_%S')}.csv"
     with open(filename, 'w', newline = '') as file:
         writer = csv.writer(file)
-        writer.writerows(cur.fetchall())
+        writer.writerow(row_headers) # write the row headers
+        rows = cur.fetchall()
+        for row in rows:
+            # deletes id from row then writes it to the csv
+            mod_row = list(row)
+            mod_row.pop(id_idx)
+            writer.writerow(mod_row)
 
+    response = send_file(filename, mimetype = filename, attachment_filename = filename, as_attachment=True)
+    response.headers.add('Access-Control-Allow-Origin', '*')
 
-
-    return "You've reached the download page"
+    return response
