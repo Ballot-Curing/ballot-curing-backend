@@ -89,8 +89,8 @@ def download():
     # END : end of similarity with ballots.py endpoint
 
     # get the file name
-    filename = f"./output/votes_{datetime.now().strftime('%d_%m_%y_%H_%M_%S')}.csv"
-    with open(filename, 'w', newline = '') as file:
+    filename = f"vote_{datetime.now().strftime('%d_%m_%y_%H_%M_%S')}.csv"
+    with open(f"./output/{filename}", 'w', newline = '') as file:
         writer = csv.writer(file)
         writer.writerow(row_headers) # write the row headers
         rows = cur.fetchall()
@@ -100,7 +100,7 @@ def download():
             mod_row.pop(id_idx)
             writer.writerow(mod_row)
 
-    response = send_file(filename, mimetype = 'text/csv', attachment_filename = filename, as_attachment=True)
+    response = send_file(f"./output/{filename}", mimetype = 'text/csv', attachment_filename = filename, as_attachment=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response
