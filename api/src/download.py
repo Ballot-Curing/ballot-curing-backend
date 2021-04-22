@@ -17,6 +17,9 @@ config = load_config()
 
 @download_bp.route('/')
 def download():
+
+    # START : same as ballots.py endpoint from here to "END"
+
     # required parameters - throws error if not present
     try:
         state = req.args['state'].upper()
@@ -82,6 +85,8 @@ def download():
     row_headers = [x[0] for x in cur.description]
     id_idx = row_headers.index('id')
     row_headers.pop(id_idx)    
+
+    # END : end of similarity with ballots.py endpoint
 
     # get the file name
     filename = f"./output/votes_{datetime.now().strftime('%d_%m_%y_%H_%M_%S')}.csv"
