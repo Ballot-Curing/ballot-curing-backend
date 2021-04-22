@@ -138,6 +138,19 @@ def get_county_data(cursor, query, state, elec_dt):
     rows = cursor.fetchall()
 
     county_data = []
+    total_rejected =[]
+    total_cured = []
+    total_processed = []
+    rejected_gender = []
+    cured_gender = []
+    total_gender = []
+    rejected_race = []
+    cured_race = []
+    total_race = []
+    rejected_age_group = []
+    cured_age_group = []
+    total_age_group = []
+    ballot_issue_count = []
 
     # parse each counties data
     for row in rows:   
@@ -149,6 +162,7 @@ def get_county_data(cursor, query, state, elec_dt):
         demo_stats = get_demographics(state, row) 
 
         # build county entry and put it in the list
+        '''
         county_stats = {
             "county" : row['county'],
             "election_dt" : elec_dt.strftime("%m/%d/%Y"),
@@ -164,16 +178,45 @@ def get_county_data(cursor, query, state, elec_dt):
             "rejected_age_group" : demo_stats['age_rej'],
             "cured_age_group" : demo_stats['age_cur'],
             "total_age_group" : demo_stats['age_tot'],
-            "ballot_issue_count" : rej_reason,
+            "ballot_issue_count" : rej_reason
         }
+        '''
 
         county_data.append(county_stats)
+
+        total_rejected.append({"name" : row['county'].title(), "value" : row['tot_rejected']})
+        total_cured.append({"name" : row['county'].title(), "value" : row['tot_cured']})
+        total_processed.append({"name" : row['county'].title(), "value" : row['tot_processed']})
+        rejected_gender.append({"name" : row['county'].title(), "value" : demo_stats['gender_rej']})
+        cured_gender.append({"name" : row['county'].title(), "value" : demo_stats['gender_cur']})
+        total_gender.append({"name" : row['county'].title(), "value" : demo_stats['gender_tot']})
+        rejected_race.append({"name" : row['county'].title(), "value" : demo_stats['race_rej']})
+        cured_race.append({"name" : row['county'].title(), "value" : demo_stats['race_cur']})
+        total_race.append({"name" : row['county'].title(), "value" : demo_stats['race_tot']})
+        rejected_age_group.append({"name" : row['county'].title(), "value" : demo_stats['age_rej']})
+        cured_age_group.append({"name" : row['county'].title(), "value" : demo_stats['age_cur']})
+        total_age_group.append({"name" : row['county'].title(), "value" : demo_stats['age_tot']})
+        ballot_issue_count.append({"name" : row['county'].title(), "value" : rej_reason})
+
 
     # build final output
     ret_dict = {
         "state" : state,
         "election_dt" : elec_dt.strftime("%m/%d/%Y"),
-        "county_data" : county_data
+       # "county_data" : county_data,
+        "total_rejected" : total_rejected,
+        "total_cured" : total_cured,
+        "total_processed" : total_processed,
+        "rejected_gender" : rejected_gender,
+        "cured_gender" : cured_gender,
+        "processed_gender" : total_gender,
+        "rejected_race" : rejected_race,
+        "cured_race" : cured_race,
+        "processed_race" : total_race,
+        "rejected_age_group" : rejected_age_group,
+        "cured_age_group" : cured_age_group,
+        "processed_age_group" : total_age_group,
+        "ballot_issue_count" : ballot_issue_count
     }
 
     return jsonify(ret_dict)
@@ -206,14 +249,14 @@ def get_demographics(state, row):
         ret_dict['race_tot'] = process_race_json(race_tot)
 
         # string parsing to convert age stats into right form
-        age_rej = eval(row['age_rej'])
-        ret_dict['age_rej'] = process_json(age_rej)
+        age_rej = json.loads(row['age_rej'])
+        ret_dict['age_rej'] = process_age_json(age_rej)
 
         age_cur = json.loads(row['age_cured'])
-        ret_dict['age_cur'] = process_json(age_cur)
+        ret_dict['age_cur'] = process_age_json(age_cur)
 
         age_tot = json.loads(row['age_tot'])
-        ret_dict['age_tot'] = process_json(age_tot)
+        ret_dict['age_tot'] = process_age_json(age_tot)
     else:
         # everything is null in the case of Georgia
         ret_dict['gender_rej'] = 'null'
@@ -237,6 +280,13 @@ def process_json(response):
     response = response.replace("None", "0")
     response = json.loads(response)
     return response
+
+def process_age_json(response):
+    response = process_json(response)
+    ret = []
+    for key in response[0]:
+        ret.append({"age" : key, "age_count" : response[0][key]})
+    return ret
 
 # special method to process the race stats as there are special cases
 def process_race_json(response):
