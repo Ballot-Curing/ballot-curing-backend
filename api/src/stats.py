@@ -137,7 +137,7 @@ def get_county_data(cursor, query, state, elec_dt):
 
     rows = cursor.fetchall()
 
-    county_data = []
+    # lists for the county_data
     total_rejected =[]
     total_cured = []
     total_processed = []
@@ -161,29 +161,7 @@ def get_county_data(cursor, query, state, elec_dt):
         # get demographic stats
         demo_stats = get_demographics(state, row) 
 
-        # build county entry and put it in the list
-        '''
-        county_stats = {
-            "county" : row['county'],
-            "election_dt" : elec_dt.strftime("%m/%d/%Y"),
-            "total_rejected" : row['tot_rejected'],
-            "total_cured" : row['tot_cured'],
-            "total_processed" : row['tot_processed'],
-            "rejected_gender" : demo_stats['gender_rej'],
-            "cured_gender" : demo_stats['gender_cur'],
-            "total_gender" : demo_stats['gender_tot'],
-            "rejected_race" : demo_stats['race_rej'],
-            "cured_race" : demo_stats['race_cur'],
-            "total_race" : demo_stats['race_tot'],
-            "rejected_age_group" : demo_stats['age_rej'],
-            "cured_age_group" : demo_stats['age_cur'],
-            "total_age_group" : demo_stats['age_tot'],
-            "ballot_issue_count" : rej_reason
-        }
-        '''
-
-        county_data.append(county_stats)
-
+        # add the data to each list
         total_rejected.append({"name" : row['county'].title(), "value" : row['tot_rejected']})
         total_cured.append({"name" : row['county'].title(), "value" : row['tot_cured']})
         total_processed.append({"name" : row['county'].title(), "value" : row['tot_processed']})
@@ -203,7 +181,6 @@ def get_county_data(cursor, query, state, elec_dt):
     ret_dict = {
         "state" : state,
         "election_dt" : elec_dt.strftime("%m/%d/%Y"),
-       # "county_data" : county_data,
         "total_rejected" : total_rejected,
         "total_cured" : total_cured,
         "total_processed" : total_processed,
@@ -284,6 +261,7 @@ def process_json(response):
 def process_age_json(response):
     response = process_json(response)
     ret = []
+    # update to have names for values
     for key in response[0]:
         ret.append({"age" : key, "age_count" : response[0][key]})
     return ret
