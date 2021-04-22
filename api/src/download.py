@@ -100,7 +100,7 @@ def download():
             mod_row.pop(id_idx)
             writer.writerow(mod_row)
 
-    response = send_file(filename, mimetype = filename, attachment_filename = filename, as_attachment=True)
+    response = send_file(filename, mimetype = 'text/csv', attachment_filename = filename, as_attachment=True)
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response
