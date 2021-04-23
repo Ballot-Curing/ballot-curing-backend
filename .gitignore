@@ -4,3 +4,4 @@ test_data
 *.swp
 __pycache__
 frontend/
+output

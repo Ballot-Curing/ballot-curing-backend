@@ -15,7 +15,39 @@ config = load_config()
 
 @ballots_bp.route('/', methods=['GET'])
 def ballots():
- 
+  # perform the query based off given parameters
+  cur = perform_query()
+
+  # attach row headers, remove ID, return json
+  row_headers = [x[0] for x in cur.description]
+  id_idx = row_headers.index('id')
+  row_headers.pop(id_idx)
+
+  rows = cur.fetchall()
+  
+  data = []
+  
+  data.append({'row_count': len(rows)})
+
+  ret_count = 0
+
+  # only return 10 entries - full query sent from downloads endpoint
+  for row in rows:
+    mod_row = list(row)
+    mod_row.pop(id_idx)
+    data.append(dict(zip(row_headers, mod_row)))
+
+    ret_count += 1
+    if ret_count == 10:
+        break
+
+  response = jsonify(data)
+  response.headers.add('Access-Control-Allow-Origin', '*')
+
+  return response
+
+# function to perform the query based of the parameters
+def perform_query():
   # required parameters - throws error if not present
   try:
     state = req.args['state'].upper()
@@ -76,31 +108,5 @@ def ballots():
     # if valid, then election_dt not valid
     abort(500, description="internal service failure")
 
-  # attach row headers, remove ID, return json
-  row_headers = [x[0] for x in cur.description]
-  id_idx = row_headers.index('id')
-  row_headers.pop(id_idx)
-
-  rows = cur.fetchall()
-  
-  data = []
-  
-  data.append({'row_count': len(rows)})
-
-  ret_count = 0
-
-  # only return 10 entries - full query sent from downloads endpoint
-  for row in rows:
-    mod_row = list(row)
-    mod_row.pop(id_idx)
-    data.append(dict(zip(row_headers, mod_row)))
-
-    ret_count += 1
-    if ret_count == 10:
-        break
-
-  response = jsonify(data)
-  response.headers.add('Access-Control-Allow-Origin', '*')
-
-  return response
-
+  # return the cursor with the results
+  return cur
