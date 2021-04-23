@@ -40,7 +40,8 @@ def download():
             mod_row.pop(id_idx)
             writer.writerow(mod_row)
 
-    file_response = send_file(f"./output/{filename}", mimetype = 'text/csv', attachment_filename = filename, as_attachment=True)
+    file_response = send_file(f"./output/{filename}", mimetype = 'text/csv',
+        attachment_filename = f"vote_{req.args['state'].upper()}_{datetime.now().strftime('%m_%d_%Y')}", as_attachment=True)
     file_response.headers.add('Access-Control-Allow-Origin', '*')
     file_response.headers['Access-Control-Expose-Headers'] = 'Content-Disposition'
     file_response.headers['Access-Control-Allow-Headers'] = 'Content-Disposition'
