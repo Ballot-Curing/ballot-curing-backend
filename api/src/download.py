@@ -1,10 +1,12 @@
 import MySQLdb
 import csv
+import os
 
 from flask import Blueprint
 from flask import request as req
 from flask import abort
 from flask import send_file
+from flask import after_this_request
 
 from datetime import datetime
 
@@ -26,8 +28,6 @@ def download():
     id_idx = row_headers.index('id')
     row_headers.pop(id_idx)    
 
-    # END : end of similarity with ballots.py endpoint
-
     # get the file name
     filename = f"vote_{datetime.now().strftime('%d_%m_%y_%H_%M_%S')}.csv"
     with open(f"./output/{filename}", 'w', newline = '') as file:
@@ -40,9 +40,15 @@ def download():
             mod_row.pop(id_idx)
             writer.writerow(mod_row)
 
-    response = send_file(f"./output/{filename}", mimetype = 'text/csv', attachment_filename = filename, as_attachment=True)
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers['Access-Control-Expose-Headers'] = 'Content-Disposition'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Disposition'
+    file_response = send_file(f"./output/{filename}", mimetype = 'text/csv', attachment_filename = filename, as_attachment=True)
+    file_response.headers.add('Access-Control-Allow-Origin', '*')
+    file_response.headers['Access-Control-Expose-Headers'] = 'Content-Disposition'
+    file_response.headers['Access-Control-Allow-Headers'] = 'Content-Disposition'
 
-    return response
+    # this runs after the request and deletes the old file
+    @after_this_request
+    def delete_file(response):
+        os.remove(f"./output/{filename}")
+        return response
+
+    return file_response
