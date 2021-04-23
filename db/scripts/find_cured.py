@@ -127,7 +127,7 @@ if __name__ == "__main__":
   else: # By default just do GA
     start_date = "10/10/20" 
     start_datetime = datetime.strptime(start_date, '%m/%d/%y')
-    for i in range(1):
+    for i in range(95):
       print("Start date: " + str(start_datetime))
       find_cured(start_datetime, "GA")
       start_datetime += timedelta(days=1)
