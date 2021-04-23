@@ -137,6 +137,12 @@ def add_to_cured(cured_db, entry):
     );
 '''
 
+def remove_cured_from_rejected(rej_db, entry):
+    return f'''
+    DELETE FROM {rej_db} 
+    WHERE voter_reg_id = "{entry["voter_reg_id"]}";
+    '''
+
 def add_to_rejected(rejected_db, entry):
     return f'''
     INSERT IGNORE INTO {rejected_db} (
