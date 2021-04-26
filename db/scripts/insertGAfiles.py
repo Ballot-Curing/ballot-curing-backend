@@ -24,7 +24,7 @@ mydb = MySQLdb.connect(host=config['DATABASE']['host'],
 
 cursor = mydb.cursor()
 # table = config['GA']['table']
-  table = '2021_01_01'
+table = '2021_01_01'
 query = schema_table(table);
 
 cursor.execute(query)
