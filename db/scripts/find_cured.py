@@ -73,39 +73,46 @@ def find_cured(today_datetime, state):
 
   elections = get_elections(cursor)
   
-  for election in elections:
+  # for election in elections:
   
-    cured_db = f'cured_{election}'
-    rejected_db = f'rejected_{election}'
-
-    # make cured table if not made
-    cursor.execute(schema_table(cured_db))
-
-    # make rejected table if not made
-    cursor.execute(schema_table(rejected_db))
+  election = "2021_01_01"
   
-    # get all cured ballots as of today
-    print("Get all cured ballots")
-    cursor.execute(queries.get_cured(election))
-    output = cursor.fetchall()
+  cured_db = f'cured_{election}'
+  rejected_db = f'rejected_{election}'
 
-    # for each cured entry, add to cured_db and remove from rejected_db
-    for entry in output:
-      cursor.execute(schema.add_to_cured(cured_db, entry))
-      cursor.execute(schema.remove_cured_from_rejected(rejected_db, entry))
-      mydb.commit()
+  # make cured table if not made
+  cursor.execute(schema_table(cured_db))
 
-    # query the current day for any new rejected that are not cured
-    print("Getting today's rejected ballots from main table")
-    cursor.execute(queries.get_rejected(election, cured_db))
-    output = cursor.fetchall()
+  # make rejected table if not made
+  cursor.execute(schema_table(rejected_db))
 
-    # for each rejected entry today, add to rejected table
-    for entry in output:
-      cursor.execute(schema.add_to_rejected(rejected_db, entry))
+  # get all cured ballots as of today by comparing rejected_db and accepted ballots in election table
+  print("Get all cured ballots")
+  cursor.execute(queries.get_cured(election, rejected_db))
+  output = cursor.fetchall()
 
-    # commit changes to db when done with election
+  # for each cured entry, add to cured_db and remove from rejected_db
+  for entry in output:
+    cursor.execute(schema.add_to_cured(cured_db, entry))
+    cursor.execute(schema.remove_cured_from_rejected(rejected_db, entry))
     mydb.commit()
+
+  # query the current day for any new rejected that are not cured
+  print("Getting today's rejected ballots from main table")
+  cursor.execute(queries.get_rejected(election, cured_db))
+  output = cursor.fetchall()
+
+  print("Adding rejected ballots to rejected table")
+  # for each rejected entry today, add to rejected table
+  for entry in output:
+    try:
+      cursor.execute(schema.add_to_rejected(rejected_db, entry))
+    except:
+      continue
+    
+
+  # commit changes to db when done with election
+  mydb.commit()
 
   # To close the connection
   mydb.close()
@@ -125,9 +132,9 @@ if __name__ == "__main__":
       find_cured(start_datetime, sys.argv[1])
       start_datetime += timedelta(days=1)
   else: # By default just do GA
-    start_date = "10/10/20" 
+    start_date = "1/1/21" 
     start_datetime = datetime.strptime(start_date, '%m/%d/%y')
-    for i in range(95):
+    for i in range(1):
       print("Start date: " + str(start_datetime))
       find_cured(start_datetime, "GA")
       start_datetime += timedelta(days=1)

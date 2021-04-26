@@ -20,13 +20,13 @@ def get_rejected(table, cured_db):
     AND today.ballot_rtn_status = "R";
     '''
 
-def get_cured(table):
+def get_cured(table, rejected):
     return f'''
     SELECT acc.*
-    FROM {table} AS rej
+    FROM {rejected} AS rej
     INNER JOIN ( 
             SELECT *
-            FROM {table}
+            FROM 2021_01_02
             WHERE ballot_rtn_status='A') acc
     ON acc.voter_reg_id = rej.voter_reg_id 
     WHERE rej.ballot_rtn_status='R';
