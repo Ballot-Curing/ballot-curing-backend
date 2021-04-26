@@ -23,13 +23,14 @@ mydb = MySQLdb.connect(host=config['DATABASE']['host'],
     local_infile = 1)
 
 cursor = mydb.cursor()
-
-query = schema_table(config['GA']['table']);
+# table = config['GA']['table']
+  table = '2021_01_01'
+query = schema_table(table);
 
 cursor.execute(query)
 
 try:
-    query = schema_index(config['GA']['table'])
+    query = schema_index(table)
     cursor.execute(query)
 except:
     print('Index already exists.')
@@ -37,29 +38,29 @@ except:
 ga_dir = config['GA']['ga_files']
 
 for entry in os.scandir(ga_dir):
-  if not entry.path.endswith('.zip'):
-    continue 
+  # if not entry.path.endswith('.zip'):
+  #   continue 
   date = entry.name[:10]
 
-  new_file_dir = os.path.join(config['GA']['rain_ga_storage'], date)
+  # new_file_dir = os.path.join(config['GA']['rain_ga_storage'], date)
   
-  try:
-    with zipfile.ZipFile(entry.path, 'r') as zip_ref:
-      print(f'Unzipping file: {entry.name}.')
-      zip_ref.extractall(new_file_dir)
-  except:
-    print(f'Error for {entry.name}: ', sys.exc_info()[0])
-    continue
+  # try:
+  #   with zipfile.ZipFile(entry.path, 'r') as zip_ref:
+  #     print(f'Unzipping file: {entry.name}.')
+  #     zip_ref.extractall(new_file_dir)
+  # except:
+  #   print(f'Error for {entry.name}: ', sys.exc_info()[0])
+  #   continue
 
-  csv_file = os.path.join(new_file_dir, config['GA']['csv_name'])
-
+  csv_file = "/home/cs310_prj3/storage/ga-files/2021_01_01/STATEWIDE.csv"
+  
   query =f'''
   LOAD DATA LOCAL INFILE '{csv_file}' IGNORE
-  INTO TABLE {config['GA']['table']}
+  INTO TABLE {table}
   CHARACTER SET latin1
   FIELDS TERMINATED BY ','
   LINES TERMINATED BY '\n'
-  IGNORE 1 ROWS (county, voter_reg_num, last_name, first_name, middle_name, @dummy, @street_no,
+  IGNORE 1 ROWS (county, voter_reg_id, last_name, first_name, middle_name, @dummy, @street_no,
             @street_name, @apt_no, city, state, zip, @dummy, @dummy, @dummy, @dummy,
                 @dummy, @dummy, @dummy, ballot_rtn_status, ballot_issue, @req_dt, @send_dt,
                 @ret_dt, ballot_style, @dummy, @dummy, @dummy, @dummy, precinct, cong_dist, 
