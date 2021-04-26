@@ -4,6 +4,7 @@ import sys
 from datetime import datetime, timedelta
 
 import queries
+import schema
 from current_data import get_elections
 from schema import schema_table
 from config import load_config
@@ -20,7 +21,7 @@ def find_cured_NC(state):
 
   print("Connected to db")
 
-  cursor = mydb.cursor()
+  cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
   elections = get_elections(cursor)
 
@@ -68,7 +69,7 @@ def find_cured(today_datetime, state):
               local_infile=1)
   print("Connected to db")
 
-  cursor = mydb.cursor()
+  cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
   elections = get_elections(cursor)
   
@@ -88,13 +89,15 @@ def find_cured(today_datetime, state):
     cursor.execute(queries.get_cured(election))
     output = cursor.fetchall()
 
-    # for each cured entry, add to cured_db
+    # for each cured entry, add to cured_db and remove from rejected_db
     for entry in output:
       cursor.execute(schema.add_to_cured(cured_db, entry))
+      cursor.execute(schema.remove_cured_from_rejected(rejected_db, entry))
+      mydb.commit()
 
     # query the current day for any new rejected that are not cured
     print("Getting today's rejected ballots from main table")
-    cursor.execute(queries.get_today_rejected(election, today_datetime, cured_db))
+    cursor.execute(queries.get_rejected(election, cured_db))
     output = cursor.fetchall()
 
     # for each rejected entry today, add to rejected table

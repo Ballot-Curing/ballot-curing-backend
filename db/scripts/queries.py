@@ -9,7 +9,7 @@ def get_counties():
     '''
 
 
-def get_today_rejected(table, today_datetime, cured_db):
+def get_rejected(table, cured_db):
     return f'''
     SELECT today.*
     FROM {table} as today
