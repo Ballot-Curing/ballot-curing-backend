@@ -18,7 +18,7 @@ A `config.ini` should be set up following the structure in `config-sample.ini`.
 
 The FLASK_APP environment variable needs to be set:
 ```
-export FLASK_APP=app.py
+export FLASK_APP=$PWD/src/app.py
 ```
 
 #### 3. Running

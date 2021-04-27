@@ -263,7 +263,7 @@ def process_age_json(response):
     ret = []
     # update to have names for values
     for key in response[0]:
-        ret.append({"age" : key, "age_count" : response[0][key]})
+        ret.append({"age" : key, "age_count" : int(response[0][key])})
     return ret
 
 # special method to process the race stats as there are special cases
