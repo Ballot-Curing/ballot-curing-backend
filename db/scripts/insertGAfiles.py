@@ -4,13 +4,15 @@ import sys
 import time
 import zipfile
 import MySQLdb
-import find_cured
+
 
 from datetime import date 
 from selenium.webdriver import Chrome
 from selenium.webdriver import ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.select import Select
+from find_cured import run_find_cured
+from elections import elections_table, update_proc_date
 
 from schema import schema_table, schema_index
 from config import load_config
@@ -38,6 +40,18 @@ except:
 
 ga_dir = config['GA']['ga_files']
 
+# create elections table
+query = elections_table()
+cursor.execute(query)
+mydb.commit()
+
+# update processed date
+query = update_proc_date(config['GA']['table'])
+cursor.execute(query)
+mydb.commit()
+
+# the data is unsorted to begin with, add the directories and the use the sorted version
+date_files = []
 for entry in os.scandir(ga_dir):
   if not entry.path.endswith('.zip'):
     continue 
@@ -76,6 +90,7 @@ for entry in os.scandir(ga_dir):
   start_time = time.time()
   cursor.execute(query)
   mydb.commit()
+  shutil.rmtree(new_file_dir)
   print(f'Rows added: {cursor.rowcount} Time taken: {time.time() - start_time} seconds.')
 
   print("Running find_cured")

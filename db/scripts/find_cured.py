@@ -128,7 +128,6 @@ if __name__ == "__main__":
   if len(sys.argv) > 1 and sys.argv[1] == "NC":
     run_find_cured("NC")
   elif len(sys.argv) > 1:
-    # TODO: Remove this for-loop for real election
     run_find_cured(sys.argv[1])
   else: # By default just do GA
     run_find_cured("GA")
