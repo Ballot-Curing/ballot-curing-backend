@@ -2,6 +2,8 @@ config.ini
 .DS_Store
 test_data
 *.swp
+*.swo
 __pycache__
 frontend/
 output
+*.nfs*
