@@ -5,7 +5,6 @@ import time
 import zipfile
 import MySQLdb
 
-
 from datetime import date 
 from selenium.webdriver import Chrome
 from selenium.webdriver import ChromeOptions
@@ -27,7 +26,6 @@ mydb = MySQLdb.connect(host=config['DATABASE']['host'],
 
 cursor = mydb.cursor()
 table = config['GA']['table']
-# table = '2021_01_01'
 query = schema_table(table);
 
 cursor.execute(query)
@@ -51,13 +49,14 @@ cursor.execute(query)
 mydb.commit()
 
 # the data is unsorted to begin with, add the directories and the use the sorted version
-date_files = []
-for entry in os.scandir(ga_dir):
+entry_files = sorted(os.scandir(ga_dir), key=lambda x: (x.is_dir(), x.name))
+
+for entry in entry_files:
   if not entry.path.endswith('.zip'):
     continue 
-
+  date = entry.name[:10]
   new_file_dir = os.path.join(config['GA']['rain_ga_storage'], date)
-  
+
   try:
     with zipfile.ZipFile(entry.path, 'r') as zip_ref:
       print(f'Unzipping file: {entry.name}.')

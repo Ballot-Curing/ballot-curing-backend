@@ -275,3 +275,4 @@ def process_race_json(response):
     response = response.replace(', {"race": ""UNDESIGNATED", "race_count": 2}', "") # TODO: Add 2 to the normal undesignated count to account for this
     response = response.replace(', {"race": ""UNDESIGNATED", "race_count": 1}', "")
     return json.loads(response)
+    
