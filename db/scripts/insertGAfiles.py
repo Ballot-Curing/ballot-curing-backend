@@ -65,7 +65,7 @@ for entry in entry_files:
     print(f'Error for {entry.name}: ', sys.exc_info()[0])
     continue
 
-  csv_file = config['GA']['csv_name']
+  csv_file = os.path.join(new_file_dir, config['GA']['csv_name'])
   
   query =f'''
   LOAD DATA LOCAL INFILE '{csv_file}' IGNORE
