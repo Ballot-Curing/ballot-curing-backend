@@ -106,9 +106,7 @@ def get_rej_reasons(election, proc_date, county=None):
 
     return get_multi_count(election, 'ballot_issue', county, proc_date, where)
 
-def get_unique_rej_per_day(election, county=None):
-    table = f'rejected_{election}'
-
+def get_unique_per_day(table, county=None):
     return f'''
     SELECT
         proc_date,
@@ -118,6 +116,13 @@ def get_unique_rej_per_day(election, county=None):
     GROUP BY proc_date ORDER BY proc_date;
     '''
 
+def get_unique_rej_per_day(election, county=None):
+    table = f'rejected_{election}'
+    return get_unique_per_day(table, county)
+
+def get_unique_cured_per_day(election, county=None):
+    table = f'cured_{election}'
+    return get_unique_per_day(table, county)
 
 # State specific queries
 

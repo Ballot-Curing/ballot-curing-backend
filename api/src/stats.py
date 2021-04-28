@@ -118,33 +118,32 @@ def single_county_stats(county):
 
 @stats_bp.route('time_series/', methods=['GET'])
 def time_series():
-    state = request.args['state'].upper()
-    county = request.args.get('county', None)
+    try:
+        state = request.args['state'].upper()
+        county = request.args.get('county', None)
+        elec_dt = request.args['election_dt'].replace('-', '_')
+    except:
+        abort(400, description = 'Bad Request')
 
     cur = util.mysql_connect(state)
         
-    query = queries.get_unique_rej_per_day(election_dt)
-    
+    data = {'rej_ts' : [], 'cured_ts' : [], 'proc_ts' : []}
+
     try:
+        query = queries.get_unique_rej_per_day(elec_dt)
         cur.execute(query)
+        data['rej_ts'] = cur.fetchall()
+
+        query = queries.get_unique_cured_per_day(elec_dt)
+        cur.execute(query)
+        data['cured_ts'] = cur.fetchall()
+
+        query = queries.get_unique_per_day(elec_dt)
+        cur.execute(query)
+        data['proc_ts'] = cur.fetchall()
     except:
         # if valid, then election_dt not valid
-        abort(500, description="internal service failure")
-
-    
-    row_headers = [x[0] for x in cur.description]
-    id_idx = row_headers.index('id')
-    row_headers.pop(id_idx)
-
-    rows = cur.fetchall()
-
-    data = []
-
-    for row in rows:
-        mod_row = list(row)
-        mod_row.pop(id_idx)
-        data.append(dict(zip(row_headers, mod_row)))
-
+        abort(500, description = "Internal Service Failure")
 
     response = jsonify(data)
     response.headers.add('Access-Control-Allow-Origin', '*')
