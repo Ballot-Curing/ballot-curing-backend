@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import queries
 import schema
 from current_data import get_elections
-from schema import schema_table
+from schema import rejected_schema_table, cured_schema_table
 from config import load_config
 
 config = load_config()
@@ -74,14 +74,14 @@ def find_cured(state):
   elections = get_elections(cursor)
   
   for election in elections:
-    cured_db = f'cured_{election}'
-    rejected_db = f'rejected_{election}'
+    cured_db = f'cured_{election}_dummy'
+    rejected_db = f'rejected_{election}_dummy'
 
     # make cured table if not made
-    cursor.execute(schema_table(cured_db))
+    cursor.execute(cured_schema_table(cured_db))
 
     # make rejected table if not made
-    cursor.execute(schema_table(rejected_db))
+    cursor.execute(rejected_schema_table(rejected_db))
 
     # get all cured ballots as of today by comparing rejected_db and accepted ballots in election table
     print("Get all cured ballots")
@@ -104,6 +104,7 @@ def find_cured(state):
     for entry in output:
       try:
         cursor.execute(schema.add_to_rejected(rejected_db, entry))
+        mydb.commit()
       except:
         print("Error adding the following entry: ")
         print(entry)

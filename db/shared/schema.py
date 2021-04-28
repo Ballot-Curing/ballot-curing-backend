@@ -89,6 +89,24 @@ def schema_table(table):
     );
     '''
 
+def rejected_schema_table(table):
+    return f'''
+    CREATE TABLE IF NOT EXISTS {table} (
+      id    INT NOT NULL,
+      {schema_col_names_types}
+      PRIMARY KEY(voter_reg_id, election_dt, ballot_rtn_status, ballot_issue)
+    );
+    '''
+    
+def cured_schema_table(table):
+    return f'''
+    CREATE TABLE IF NOT EXISTS {table} (
+      id    INT NOT NULL,
+      {schema_col_names_types}
+      PRIMARY KEY(voter_reg_id, election_dt, ballot_rtn_status, ballot_issue)
+    );
+    '''
+
 def schema_index(table):
    return f'''
     CREATE UNIQUE INDEX IF NOT EXISTS voter_idx 
