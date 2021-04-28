@@ -44,7 +44,7 @@ def compute_state_stats(proc_date):
             cured_table = f'cured_{election}'
             rej_table = f'rejected_{election}'
 
-            cursor.execute(queries.get_processed_count(election, proc_date))
+            print(queries.get_processed_count(election, proc_date))
             processed_tot = cursor.fetchall()[0]['num_processed']
 
             cursor.execute(queries.get_cured_count(election, proc_date))
@@ -198,3 +198,9 @@ def compute_county_stats(proc_date):
 
         mydb.close()
 
+
+if __name__ == '__main__':
+    proc_date = datetime.now()
+
+    compute_state_stats(proc_date)
+    compute_county_stats(proc_date)
