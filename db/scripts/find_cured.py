@@ -74,8 +74,8 @@ def find_cured(state):
   elections = get_elections(cursor)
   
   for election in elections:
-    cured_db = f'cured_{election}_dummy'
-    rejected_db = f'rejected_{election}_dummy'
+    cured_db = f'cured_{election}'
+    rejected_db = f'rejected_{election}'
 
     # make cured table if not made
     cursor.execute(cured_schema_table(cured_db))
