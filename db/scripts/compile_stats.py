@@ -1,7 +1,7 @@
 import MySQLdb
+import os
 import sys
 import json
-import logging, logging.config
 
 from datetime import datetime, timedelta, date
 from time import time
@@ -10,11 +10,10 @@ import schema
 import queries
 
 from current_data import cur_states as states, get_elections
-from config import load_config
+from config import load_config, load_logger
 
 config = load_config()
-logging.config.fileConfig(fname='log_config.ini')
-logger = logging.getLogger('dev')
+logger = load_logger()
 
 def compute_state_stats(proc_date):
     '''
@@ -45,6 +44,7 @@ def compute_state_stats(proc_date):
             rej_table = f'rejected_{election}'
 
             print(queries.get_processed_count(election, proc_date))
+            cursor.execute(queries.get_processed_count(election, proc_date))
             processed_tot = cursor.fetchall()[0]['num_processed']
 
             cursor.execute(queries.get_cured_count(election, proc_date))
@@ -133,7 +133,7 @@ def compute_county_stats(proc_date):
         counties = cursor.fetchall()
 
         elections = get_elections(cursor)
-
+        
         for election in elections:
             logger.info(f'Computing {state} county-level statistics for {election}.')
             t0 = time()

@@ -15,9 +15,12 @@ stats_bp = Blueprint('stats',__name__)
 
 @stats_bp.route('/', methods=['GET'])
 def state_stats():
-    # get required params
-    state = request.args['state'].upper()
-    elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
+    try:
+        # get required params
+        state = request.args['state'].upper()
+        elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
+    except:
+        abort(400, description = 'Bad Request')
 
     # connect to the database
     cursor = util.mysql_connect(state)
@@ -28,12 +31,16 @@ def state_stats():
     query = f'''
     SELECT *
     FROM state_stats
-    WHERE election_dt = '{elec_dt.strftime("%y/%m/%d")}';
+    WHERE election_dt = '{elec_dt}';
     '''
     
     cursor.execute(query)
 
     row = cursor.fetchone()
+
+    if not row:
+        print(query)
+        abort(404, description = 'Not Found')
 
     # gets the fields
     election_dt = row['election_dt']
@@ -43,10 +50,10 @@ def state_stats():
 
     # string parsing to convert rej_reason into the right form
     rej_reason = json.loads(row['rej_reason'])
-    rej_reason = process_json(rej_reason) 
+    rej_reason = stats_util.process_json(rej_reason) 
 
     # get demographic stats
-    demo_stats = get_demographics(state, row)
+    demo_stats = stats_util.get_demographics(state, row)
 
     # builds dictionary manually due to the processing that was needed
     ret = {
@@ -74,10 +81,13 @@ def state_stats():
 
 @stats_bp.route('/county_stats/', methods=['GET'])
 def county_stats():
-
-    # get required params
-    state = request.args['state'].upper()
-    elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
+    
+    try:
+        # get required params
+        state = request.args['state'].upper()
+        elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
+    except:
+        abort(400, 'Bad Request')
 
     cursor = util.mysql_connect(state)
 
@@ -88,7 +98,7 @@ def county_stats():
     WHERE election_dt = '{elec_dt.strftime("%y/%m/%d")}';
     '''
 
-    response = get_county_data(cursor, query, state, elec_dt)
+    response = stats_util.get_county_data(cursor, query, state, elec_dt)
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response
@@ -110,7 +120,7 @@ def single_county_stats(county):
     AND county = "{county}");
     '''
 
-    response = get_county_data(cursor, query, state, elec_dt)
+    response = stats_util.get_county_data(cursor, query, state, elec_dt)
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response

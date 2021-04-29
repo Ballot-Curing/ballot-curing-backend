@@ -1,3 +1,7 @@
+import json
+
+from flask import jsonify
+
 def get_county_data(cursor, query, state, elec_dt):
     cursor.execute(query)
 

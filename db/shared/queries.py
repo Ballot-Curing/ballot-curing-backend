@@ -1,6 +1,9 @@
+
 '''
 Queries to gather statistics of interest.
 '''
+
+from datetime import datetime
 
 def get_counties():
     return f'''
@@ -33,6 +36,8 @@ def get_cured(table):
     '''
 
 def get_count(table, field_name, county, proc_date, where=[]):
+    proc_date = strftime(proc_date, '%m_%d_%Y')
+
     where_clause = f'WHERE proc_date = {proc_date}'
     where_clause += f' AND county = "{county}"' if county else ''
     
@@ -57,6 +62,8 @@ def get_rej_count(election, proc_date, county=None):
     return get_count(table, 'num_rejected', county, proc_date)
 
 def get_multi_count(table, col, county, proc_date, where=[]):
+    proc_date = strftime(proc_date, '%m_%d_%Y')
+
     where_clause = f'WHERE proc_date = {proc_date}'
     where_clause += f' AND county = "{county}"' if county else ''
     
@@ -81,7 +88,8 @@ def get_race_count(election, proc_date, county=None):
     return get_multi_count(election, 'race', county, proc_date)
 
 def get_age_count(election, proc_date, county=None):
-    # consolidate age ranges
+    proc_date = strftime(proc_date, '%m_%d_%Y')
+
     where = f'WHERE proc_date = {proc_date}'
     where += f' AND county = "{county}"' if county else ''
 

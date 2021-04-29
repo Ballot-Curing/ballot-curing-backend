@@ -5,5 +5,4 @@ test_data
 *.swo
 __pycache__
 frontend/
-output
 *.nfs*
