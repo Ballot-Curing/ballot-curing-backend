@@ -28,6 +28,15 @@ def download():
     id_idx = row_headers.index('id')
     row_headers.pop(id_idx)    
 
+    date_idxs = [
+            row_headers.index('proc_date'), 
+            row_headers.index('ballot_ret_dt'), 
+            row_headers.index('ballot_req_dt'), 
+            row_headers.index('ballot_send_dt')
+            ]
+
+    print(date_idxs)
+
     # get the file name
     filename = f"vote_{datetime.now().strftime('%d_%m_%y_%H_%M_%S')}.csv"
     with open(f"./output/{filename}", 'w', newline = '') as file:
@@ -38,11 +47,15 @@ def download():
             # deletes id from row then writes it to the csv
             mod_row = list(row)
             mod_row.pop(id_idx)
+            
+            for idx in date_idxs:
+                if mod_row[idx]:
+                    mod_row[idx] = datetime.strftime(mod_row[idx], '%m-%d-%Y') 
             writer.writerow(mod_row)
 
     file_response = send_file(f"./output/{filename}", mimetype = 'text/csv',
         attachment_filename = f"vote_{req.args['state'].upper()}_{datetime.now().strftime('%m_%d_%Y')}", as_attachment=True)
-    file_response.headers.add('Access-Control-Allow-Origin', '*')
+    file_response.headers['Access-Control-Allow-Origin'] = '*'
     file_response.headers['Access-Control-Expose-Headers'] = 'Content-Disposition'
     file_response.headers['Access-Control-Allow-Headers'] = 'Content-Disposition'
 
