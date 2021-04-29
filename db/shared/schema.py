@@ -78,6 +78,17 @@ stat_col_names_types = '''
         age_rej                 JSON,
 '''
 
+time_series_col_names_types = '''
+        proc_date               DATETIME,
+        election_dt             DATETIME,
+        processed               INT,
+        unique_processed        INT,
+        rejected                INT,
+        unique_rej              INT,
+        cured                   INT,
+        unique_cured            INT,
+'''
+
 # General schema creation functions
 
 def schema_table(table):
@@ -118,6 +129,23 @@ def create_county_stats_table():
     CREATE TABLE IF NOT EXISTS county_stats (
         county                  VARCHAR(25),
         {stat_col_names_types}
+        PRIMARY KEY (county, proc_date, election_dt)
+    );
+    '''
+
+def create_state_time_series_table():
+    return f'''
+    CREATE TABLE IF NOT EXISTS state_time_series (
+        {time_series_col_names_types}
+        PRIMARY KEY (proc_date, election_dt)
+    );
+    '''
+
+def create_county_time_series_table():
+    return f'''
+    CREATE TABLE IF NOT EXISTS county_time_series (
+        county                  VARCHAR(25),
+        {time_series_col_names_types}
         PRIMARY KEY (county, proc_date, election_dt)
     );
     '''
@@ -195,6 +223,19 @@ def add_county_stat():
     return '''
     INSERT IGNORE INTO county_stats
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+    '''
+
+
+def insert_state_time_series():
+    return '''
+    INSERT IGNORE INTO state_time_series
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
+    '''
+
+def insert_county_time_series():
+    return '''
+    INSERT IGNORE INTO county_time_series
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
     '''
 
 # State-specific functions

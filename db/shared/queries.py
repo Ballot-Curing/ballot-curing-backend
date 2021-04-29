@@ -2,15 +2,113 @@
 '''
 Queries to gather statistics of interest.
 '''
+import MySQLdb
+import json
+from datetime import datetime 
 
-from datetime import datetime
+import schema
+from current_data import mysql_connect
+
+class Election:
+
+    def __init__(self, cursor, state, proc_date=None):
+        self.cursor = cursor
+        self.state = state
+
+        self.county = None
+
+        if proc_date:
+            self.set_proc_date(proc_date)
+
+    def set_county(self, county):
+        self.county = county
+
+    def set_proc_date(self, proc_dt):
+        global proc_date 
+        proc_date = proc_dt
+
+    def set_elec_dt(self, elec_dt):
+        self.elec_dt = elec_dt
+
+        self.elec_str = datetime.strftime(elec_dt, '%m_%d_%Y')
+        self.cured_table = f'cured_{self.elec_str}'
+        self.rej_table = f'rejected_{self.elec_str}'
+
+    def get_processed(self):
+        self.cursor.execute(get_processed_count(self.elec_str, self.county))
+        return self.cursor.fetchall()[0]['num_processed']
+        
+    def get_cured(self):
+        self.cursor.execute(get_cured_count(self.elec_str, self.county))
+        return self.cursor.fetchall()[0]['num_cured']
+
+    def get_rejected(self):
+        self.cursor.execute(get_rej_count(self.elec_str, self.county))
+        return self.cursor.fetchall()[0]['num_rejected']
+
+    def get_rej_reasons(self):
+        self.cursor.execute(get_rej_reasons(self.elec_str, self.county))
+        return json.dumps(str(self.cursor.fetchall()))
+
+    def get_gender_counts(self):
+        counts = {}
+
+        self.cursor.execute(get_gender_count(self.elec_str, self.county))
+        counts['total'] = json.dumps(str(self.cursor.fetchall()))
+
+        self.cursor.execute(get_gender_count(self.cured_table, self.county))
+        counts['cured'] = json.dumps(str(self.cursor.fetchall()))
+
+        self.cursor.execute(get_gender_count(self.rej_table, self.county))
+        counts['rejected'] = json.dumps(str(self.cursor.fetchall()))
+
+        return counts
+
+    def get_race_counts(self):
+        counts = {}
+
+        self.cursor.execute(get_race_count(self.elec_str, self.county))
+        counts['total'] = json.dumps(str(self.cursor.fetchall()))
+
+        self.cursor.execute(get_race_count(self.cured_table, self.county))
+        counts['cured'] = json.dumps(str(self.cursor.fetchall()))
+
+        self.cursor.execute(get_race_count(self.rej_table, self.county))
+        counts['rejected'] = json.dumps(str(self.cursor.fetchall()))
+
+        return counts
+
+    def get_age_counts(self):
+        counts = {}
+
+        self.cursor.execute(get_age_count(self.elec_str, self.county))
+        counts['total'] = json.dumps(str(self.cursor.fetchall()))
+
+        self.cursor.execute(get_age_count(self.cured_table, self.county))
+        counts['cured'] = json.dumps(str(self.cursor.fetchall()))
+
+        self.cursor.execute(get_age_count(self.rej_table, self.county))
+        counts['rejected'] = json.dumps(str(self.cursor.fetchall()))
+
+        return counts
+    
+    def get_unique_processed(self):
+        self.cursor.execute(get_unique_per_day(self.elec_str, self.county))
+        return self.cursor.fetchall()
+
+    def get_unique_rej(self):
+        self.cursor.execute(get_unique_rej_per_day(self.elec_str, self.county))
+        return self.cursor.fetchall()
+
+    def get_unique_cured(self):
+        self.cursor.execute(get_unique_cured_per_day(self.elec_str, self.county))
+        return self.cursor.fetchall()
 
 def get_counties():
     return f'''
     SELECT county
     FROM counties;
     '''
-
 
 def get_rejected(table, cured_db):
     return f'''
@@ -35,37 +133,54 @@ def get_cured(table):
     WHERE rej.ballot_rtn_status = 'R';
     '''
 
-def get_count(table, field_name, county, proc_date, where=[]):
-    proc_date = strftime(proc_date, '%m_%d_%Y')
+def get_count(table, field_name, county, where=[]):
+    where_clause = f'WHERE proc_date = "{proc_date}"' if proc_date else ''
 
-    where_clause = f'WHERE proc_date = {proc_date}'
-    where_clause += f' AND county = "{county}"' if county else ''
+    if where_clause:
+        where_clause += f' AND county = "{county}"' if county else ''
+    else:
+        where_clause = f'WHERE county = "{county}"' if county else ''
     
     for additional_clause in where:
         where_clause += f' AND {additional_clause}'
 
-    return f'''
+    query = f'''
     SELECT COUNT(*) AS {field_name}
     FROM {table}
     {where_clause};
     '''
 
-def get_processed_count(election, proc_date, county=None):
-    return get_count(election, 'num_processed', county, proc_date)
+    return query
 
-def get_cured_count(election, proc_date, county=None):
+def get_processed_count(election, county=None):
+    field_name = 'num_processed'
+    table = election
+    where_clause = f'WHERE proc_date = "{proc_date}"' if proc_date else ''
+
+    query =  f'''
+    SELECT COUNT(DISTINCT voter_reg_id) AS {field_name}
+    FROM {table}
+    {where_clause};
+    '''
+
+    print(query)
+    return query
+
+def get_cured_count(election, county=None):
     table = f'cured_{election}'
-    return get_count(table, 'num_cured', county, proc_date)
+    return get_count(table, 'num_cured', county)
 
-def get_rej_count(election, proc_date, county=None):
+def get_rej_count(election, county=None):
     table = f'rejected_{election}'
-    return get_count(table, 'num_rejected', county, proc_date)
+    return get_count(table, 'num_rejected', county)
 
-def get_multi_count(table, col, county, proc_date, where=[]):
-    proc_date = strftime(proc_date, '%m_%d_%Y')
-
-    where_clause = f'WHERE proc_date = {proc_date}'
-    where_clause += f' AND county = "{county}"' if county else ''
+def get_multi_count(table, col, county, where=[]):
+    where_clause = f'WHERE proc_date = "{proc_date}"' if proc_date else ''
+    
+    if where_clause:
+        where_clause += f' AND county = "{county}"' if county else ''
+    else:
+        where_clause = f'WHERE county = "{county}"' if county else ''
     
     for additional_clause in where:
         where_clause += f' AND {additional_clause}'
@@ -81,17 +196,19 @@ def get_multi_count(table, col, county, proc_date, where=[]):
     GROUP BY {col};    
     ''' 
     
-def get_gender_count(election, proc_date, county=None):
-    return get_multi_count(election, 'gender', county, proc_date)
+def get_gender_count(election, county=None):
+    return get_multi_count(election, 'gender', county)
 
-def get_race_count(election, proc_date, county=None):
-    return get_multi_count(election, 'race', county, proc_date)
+def get_race_count(election, county=None):
+    return get_multi_count(election, 'race', county)
 
-def get_age_count(election, proc_date, county=None):
-    proc_date = strftime(proc_date, '%m_%d_%Y')
+def get_age_count(election, county=None):
+    where_clause = f'WHERE proc_date = "{proc_date}"' if proc_date else ''
 
-    where = f'WHERE proc_date = {proc_date}'
-    where += f' AND county = "{county}"' if county else ''
+    if where_clause:
+        where_clause += f' AND county = "{county}"' if county else ''
+    else:
+        where_clause = f'WHERE county = "{county}"' if county else ''
 
     return f'''
     SELECT
@@ -102,17 +219,17 @@ def get_age_count(election, proc_date, county=None):
     FROM (
         SELECT voter_reg_id, age
         FROM {election}
-        {where}
+        {where_clause}
         GROUP BY voter_reg_id, age
     ) temp; 
     '''
 
   #  return get_multi_count(election, 'age', county) # if want each individual age
 
-def get_rej_reasons(election, proc_date, county=None):
+def get_rej_reasons(election, county=None):
     where = ['ballot_rtn_status = "R"'];
 
-    return get_multi_count(election, 'ballot_issue', county, proc_date, where)
+    return get_multi_count(election, 'ballot_issue', county, where)
 
 def get_unique_per_day(table, county=None):
     return f'''

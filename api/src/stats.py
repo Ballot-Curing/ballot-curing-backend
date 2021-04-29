@@ -131,7 +131,7 @@ def time_series():
     try:
         state = request.args['state'].upper()
         county = request.args.get('county', None)
-        elec_dt = request.args['election_dt'].replace('-', '_')
+        elec_dt = datetime.strptime(request.args['election_dt'], '')
     except:
         abort(400, description = 'Bad Request')
 
@@ -140,6 +140,12 @@ def time_series():
     data = {'rej_ts' : [], 'cured_ts' : [], 'proc_ts' : []}
 
     try:
+        query = f'''
+        SELECT *
+        FROM state_time_series
+        WHERE election_dt = '{elec_dt}'
+        '''
+
         query = queries.get_unique_rej_per_day(elec_dt)
         cur.execute(query)
         data['rej_ts'] = cur.fetchall()
@@ -152,7 +158,6 @@ def time_series():
         cur.execute(query)
         data['proc_ts'] = cur.fetchall()
     except:
-        # if valid, then election_dt not valid
         abort(500, description = "Internal Service Failure")
 
     response = jsonify(data)
