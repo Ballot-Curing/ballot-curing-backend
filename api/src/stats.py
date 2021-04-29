@@ -162,19 +162,20 @@ def get_county_data(cursor, query, state, elec_dt):
         demo_stats = get_demographics(state, row) 
 
         # add the data to each list
-        total_rejected.append({"name" : row['county'].title(), "value" : row['tot_rejected']})
-        total_cured.append({"name" : row['county'].title(), "value" : row['tot_cured']})
-        total_processed.append({"name" : row['county'].title(), "value" : row['tot_processed']})
-        rejected_gender.append({"name" : row['county'].title(), "value" : demo_stats['gender_rej']})
-        cured_gender.append({"name" : row['county'].title(), "value" : demo_stats['gender_cur']})
-        total_gender.append({"name" : row['county'].title(), "value" : demo_stats['gender_tot']})
-        rejected_race.append({"name" : row['county'].title(), "value" : demo_stats['race_rej']})
-        cured_race.append({"name" : row['county'].title(), "value" : demo_stats['race_cur']})
-        total_race.append({"name" : row['county'].title(), "value" : demo_stats['race_tot']})
-        rejected_age_group.append({"name" : row['county'].title(), "value" : demo_stats['age_rej']})
-        cured_age_group.append({"name" : row['county'].title(), "value" : demo_stats['age_cur']})
-        total_age_group.append({"name" : row['county'].title(), "value" : demo_stats['age_tot']})
-        ballot_issue_count.append({"name" : row['county'].title(), "value" : rej_reason})
+        county_name = get_county_name(state, row['county'])
+        total_rejected.append({"name" : county_name, "value" : row['tot_rejected']})
+        total_cured.append({"name" : county_name, "value" : row['tot_cured']})
+        total_processed.append({"name" : county_name, "value" : row['tot_processed']})
+        rejected_gender.append({"name" : county_name, "value" : demo_stats['gender_rej']})
+        cured_gender.append({"name" : county_name, "value" : demo_stats['gender_cur']})
+        total_gender.append({"name" : county_name, "value" : demo_stats['gender_tot']})
+        rejected_race.append({"name" : county_name, "value" : demo_stats['race_rej']})
+        cured_race.append({"name" : county_name, "value" : demo_stats['race_cur']})
+        total_race.append({"name" : county_name, "value" : demo_stats['race_tot']})
+        rejected_age_group.append({"name" : county_name, "value" : demo_stats['age_rej']})
+        cured_age_group.append({"name" : county_name, "value" : demo_stats['age_cur']})
+        total_age_group.append({"name" : county_name, "value" : demo_stats['age_tot']})
+        ballot_issue_count.append({"name" : county_name, "value" : rej_reason})
 
 
     # build final output
@@ -197,6 +198,28 @@ def get_county_data(cursor, query, state, elec_dt):
     }
 
     return jsonify(ret_dict)
+
+# method to get the counry name
+def get_county_name(state, county_string):
+    if (state == 'GA'):
+        # counties in GA with an irregular caps scheme 
+        irregular = {
+            'DEKALB' : 'DeKalb',
+            'MCDUFFIE' : 'McDuffie',
+            'MCINTOSH' : 'McIntosh'
+        }
+        if county_string.upper() in irregular:
+            return irregular[county_string.upper()]
+
+    elif (state == 'NC'):
+        # counties in NC with an irregular caps scheme 
+        irregular = {
+            'MCDOWELL' : 'McDowell'
+        }
+        if county_string.upper() in irregular:
+            return irregular[county_string.upper()]
+
+    return county_string.title()
 
 # method to get the demographic info from the mysql row
 def get_demographics(state, row):
