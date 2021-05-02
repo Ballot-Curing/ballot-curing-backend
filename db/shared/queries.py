@@ -93,7 +93,7 @@ class Election:
         return counts
     
     def get_unique_processed(self):
-        self.cursor.execute(get_unique_per_day(self.elec_str, self.county))
+        self.cursor.execute(get_unique_proc_per_day(self.elec_str, self.county))
         return self.cursor.fetchall()
 
     def get_unique_rej(self):
@@ -134,7 +134,7 @@ def get_cured(table):
     '''
 
 def get_count(table, field_name, county, where=[]):
-    where_clause = f'WHERE proc_date = "{proc_date}"' if proc_date else ''
+    where_clause = f'WHERE proc_date <= "{proc_date}"' if proc_date else ''
 
     if where_clause:
         where_clause += f' AND county = "{county}"' if county else ''
@@ -145,7 +145,7 @@ def get_count(table, field_name, county, where=[]):
         where_clause += f' AND {additional_clause}'
 
     query = f'''
-    SELECT COUNT(*) AS {field_name}
+    SELECT COUNT(DISTINCT voter_reg_id) AS {field_name}
     FROM {table}
     {where_clause};
     '''
@@ -153,18 +153,7 @@ def get_count(table, field_name, county, where=[]):
     return query
 
 def get_processed_count(election, county=None):
-    field_name = 'num_processed'
-    table = election
-    where_clause = f'WHERE proc_date = "{proc_date}"' if proc_date else ''
-
-    query =  f'''
-    SELECT COUNT(DISTINCT voter_reg_id) AS {field_name}
-    FROM {table}
-    {where_clause};
-    '''
-
-    print(query)
-    return query
+    return get_count(election, 'num_processed', county)
 
 def get_cured_count(election, county=None):
     table = f'cured_{election}'
@@ -175,7 +164,7 @@ def get_rej_count(election, county=None):
     return get_count(table, 'num_rejected', county)
 
 def get_multi_count(table, col, county, where=[]):
-    where_clause = f'WHERE proc_date = "{proc_date}"' if proc_date else ''
+    where_clause = f'WHERE proc_date <= "{proc_date}"' if proc_date else ''
     
     if where_clause:
         where_clause += f' AND county = "{county}"' if county else ''
@@ -203,7 +192,7 @@ def get_race_count(election, county=None):
     return get_multi_count(election, 'race', county)
 
 def get_age_count(election, county=None):
-    where_clause = f'WHERE proc_date = "{proc_date}"' if proc_date else ''
+    where_clause = f'WHERE proc_date <= "{proc_date}"' if proc_date else ''
 
     if where_clause:
         where_clause += f' AND county = "{county}"' if county else ''
@@ -227,27 +216,51 @@ def get_age_count(election, county=None):
   #  return get_multi_count(election, 'age', county) # if want each individual age
 
 def get_rej_reasons(election, county=None):
-    where = ['ballot_rtn_status = "R"'];
+    table = f'rejected_{election}'
+    return get_multi_count(table, 'ballot_issue', county)
 
-    return get_multi_count(election, 'ballot_issue', county, where)
+def get_unique_proc_per_day(election, county=None):
+    where_clause = f'WHERE county = "{county}"' if county else ''
+    table = election
 
-def get_unique_per_day(table, county=None):
     return f'''
     SELECT
         proc_date,
         COUNT(proc_date) AS count,
         GREATEST(COUNT(proc_date) - LAG(COUNT(proc_date), 1) OVER (ORDER BY proc_date), 0) AS diff
     FROM {table}
+    {where_clause}
     GROUP BY proc_date ORDER BY proc_date;
+    '''
+
+def get_unique_rej_cur_per_day(table, county=None):
+    where_clause = f'WHERE county = "{county}"' if county else ''
+
+    return f'''
+    WITH data AS (
+      SELECT
+        proc_date,
+        COUNT(DISTINCT voter_reg_id) AS diff
+      FROM {table}
+      {where_clause}
+      GROUP BY proc_date
+    )
+
+    SELECT
+      proc_date,
+      diff,
+      SUM(diff) OVER (ORDER BY proc_date) AS count
+    FROM data
+    ORDER BY proc_date;
     '''
 
 def get_unique_rej_per_day(election, county=None):
     table = f'rejected_{election}'
-    return get_unique_per_day(table, county)
+    return get_unique_rej_cur_per_day(table, county)
 
 def get_unique_cured_per_day(election, county=None):
     table = f'cured_{election}'
-    return get_unique_per_day(table, county)
+    return get_unique_rej_cur_per_day(table, county)
 
 # State specific queries
 
