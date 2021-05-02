@@ -1,4 +1,5 @@
 import MySQLdb
+import sys
 import json
 
 from flask import Blueprint
@@ -31,7 +32,8 @@ def state_stats():
     query = f'''
     SELECT *
     FROM state_stats
-    WHERE election_dt = '{elec_dt}';
+    WHERE election_dt = '{elec_dt}'
+    ORDER BY proc_date ASC;
     '''
     
     cursor.execute(query)
@@ -41,12 +43,6 @@ def state_stats():
     if not row:
         print(query)
         abort(404, description = 'Not Found')
-
-    # gets the fields
-    election_dt = row['election_dt']
-    tot_rej = row['tot_rejected']
-    tot_cured = row['tot_cured']
-    tot_processed = row['tot_processed']
 
     # string parsing to convert rej_reason into the right form
     rej_reason = json.loads(row['rej_reason'])
@@ -58,10 +54,11 @@ def state_stats():
     # builds dictionary manually due to the processing that was needed
     ret = {
         "state" : state,
-	"election_dt" : election_dt.strftime("%m/%d/%Y"),
-        "total_rejected" : tot_rej,
-        "total_cured" : tot_cured,
-        "total_processed" : tot_processed,
+	"election_dt" : row['election_dt'],
+        "proc_date" : row['proc_date'],
+        "total_rejected": row['tot_rejected'],
+        "total_cured" : row['tot_cured'],
+        "total_processed" : row['tot_processed'],
         "rejected_gender" : demo_stats['gender_rej'],
         "cured_gender" : demo_stats['gender_cur'],
         "total_gender" : demo_stats['gender_tot'],
@@ -81,7 +78,6 @@ def state_stats():
 
 @stats_bp.route('/county_stats/', methods=['GET'])
 def county_stats():
-    
     try:
         # get required params
         state = request.args['state'].upper()
@@ -95,7 +91,8 @@ def county_stats():
     query = f'''
     SELECT *
     FROM county_stats
-    WHERE election_dt = '{elec_dt.strftime("%y/%m/%d")}';
+    WHERE election_dt = '{elec_date}'
+    ORDER BY proc_date ASC;
     '''
 
     response = stats_util.get_county_data(cursor, query, state, elec_dt)
@@ -116,8 +113,9 @@ def single_county_stats(county):
     query = f'''
     SELECT *
     FROM county_stats
-    WHERE (election_dt = '{elec_dt.strftime("%y/%m/%d")}'
-    AND county = "{county}");
+    WHERE (election_dt = '{elec_dt}'
+    AND county = "{county}"
+    ORDER BY proc_date ASC);
     '''
 
     response = stats_util.get_county_data(cursor, query, state, elec_dt)
@@ -131,13 +129,14 @@ def time_series():
     try:
         state = request.args['state'].upper()
         county = request.args.get('county', None)
-        elec_dt = datetime.strptime(request.args['election_dt'], '')
+        elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y').date()
     except:
         abort(400, description = 'Bad Request')
 
     cur = util.mysql_connect(state)
         
-    data = {'rej_ts' : [], 'cured_ts' : [], 'proc_ts' : []}
+    data = {'rejected_totals' : [], 'cured_totals' : [], 'proc_totals' : [],
+            'rejected_unique' : [], 'cured_unique' : [], 'proc_unique' : []}
 
     try:
         query = f'''
@@ -146,18 +145,24 @@ def time_series():
         WHERE election_dt = '{elec_dt}'
         '''
 
-        query = queries.get_unique_rej_per_day(elec_dt)
         cur.execute(query)
-        data['rej_ts'] = cur.fetchall()
+        rows = cur.fetchall()
 
-        query = queries.get_unique_cured_per_day(elec_dt)
-        cur.execute(query)
-        data['cured_ts'] = cur.fetchall()
+        for row in rows:
+            print(row)
+            proc_date = row['proc_date'].date()
 
-        query = queries.get_unique_per_day(elec_dt)
-        cur.execute(query)
-        data['proc_ts'] = cur.fetchall()
+            data['rejected_totals'].append({'x' : proc_date, 'y' : row['rejected']})
+            data['rejected_unique'].append({'x' : proc_date, 'y' : row['unique_rej']})
+
+            data['cured_totals'].append({'x' : proc_date, 'y' : row['cured']})
+            data['cured_unique'].append({'x' : proc_date, 'y' : row['unique_cured']})
+
+            data['proc_totals'].append({'x' : proc_date, 'y' : row['processed']})
+            data['proc_unique'].append({'x' : proc_date, 'y' : row['unique_processed']})
+
     except:
+        print("Unexpected error:", sys.exc_info())
         abort(500, description = "Internal Service Failure")
 
     response = jsonify(data)
