@@ -213,29 +213,22 @@ def add_to_rejected_NC(rejected_db, entry):
     );
 '''
 
-def add_state_stat():
-    return '''
-    INSERT IGNORE INTO state_stats 
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
+def insert_stat(county=None):
+    table = 'county_stats' if county else 'state_stats'
+    county_string = '"{county}",' if county else ''
+
+    return f'''
+    INSERT IGNORE INTO {table} 
+    VALUES ({county_string} %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
     '''
 
-def add_county_stat():
-    return '''
-    INSERT IGNORE INTO county_stats
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-    '''
+def insert_time_series(county=None):
+    table = 'county_time_series' if county else 'state_time_series'
+    county_string = f'"{county}",' if county else ''
 
-
-def insert_state_time_series():
-    return '''
-    INSERT IGNORE INTO state_time_series
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
-    '''
-
-def insert_county_time_series():
-    return '''
-    INSERT IGNORE INTO county_time_series
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+    return f'''
+    INSERT IGNORE INTO {table} 
+    VALUES ({county_string} %s, %s, %s, %s, %s, %s, %s, %s);
     '''
 
 # State-specific functions
