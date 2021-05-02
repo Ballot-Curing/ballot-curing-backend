@@ -26,7 +26,9 @@ def download():
     # get the row headers
     row_headers = [x[0] for x in cur.description]
     id_idx = row_headers.index('id')
-    row_headers.pop(id_idx)    
+    row_headers.pop(id_idx)  
+
+
 
     # get the file name
     filename = f"vote_{datetime.now().strftime('%d_%m_%y_%H_%M_%S')}.csv"
@@ -34,11 +36,23 @@ def download():
         writer = csv.writer(file)
         writer.writerow(row_headers) # write the row headers
         rows = cur.fetchall()
+        print('here')
+
+        volunteers = int(req.args['volunteers'])
+        num_each = len(rows) / volunteers 
+
+        count = 0
         for row in rows:
             # deletes id from row then writes it to the csv
             mod_row = list(row)
             mod_row.pop(id_idx)
             writer.writerow(mod_row)
+
+            # add line break if needed
+            count += 1
+            if count % num_each == 0:
+                writer.writerow()
+
 
     file_response = send_file(f"./output/{filename}", mimetype = 'text/csv',
         attachment_filename = f"vote_{req.args['state'].upper()}_{datetime.now().strftime('%m_%d_%Y')}", as_attachment=True)
