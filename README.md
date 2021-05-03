@@ -15,6 +15,7 @@ The `BALLOT_CURING_PATH` and `PYTHONPATH` environment variables must be set.
 cd ballot-curing-backend/
 export BALLOT_CURING_PATH=$PWD
 export PYTHONPATH=$PYTHONPATH:$PWD:$PWD/db/shared
+export FLASK_APP=$PWD/api/src/app.py
 ```
 
 Set up variables for state configurations in `config.ini`. A sample configuration is provided.
