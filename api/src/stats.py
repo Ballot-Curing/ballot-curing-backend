@@ -1,6 +1,5 @@
 import MySQLdb
 import json
-
 from flask import Blueprint
 from flask import abort
 from flask import jsonify
@@ -8,6 +7,9 @@ from flask import request
 from datetime import datetime
 
 from config import load_config
+import queries
+import util
+from lib import stats_util
 
 stats_bp = Blueprint('stats',__name__)
 
@@ -20,12 +22,7 @@ def state_stats():
     elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
 
     # connect to the database
-    mydb = MySQLdb.connect(host=config['DATABASE']['host'],
-        user=config['DATABASE']['user'],
-        passwd=config['DATABASE']['passwd'],
-        db=config[state]['db'], 
-        local_infile = 1)
-
+    mydb = util.mysql_connect(state)
     cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
     # query to get statewide stats
@@ -78,18 +75,11 @@ def state_stats():
 
 @stats_bp.route('/county_stats/', methods=['GET'])
 def county_stats():
-
     # get required params
     state = request.args['state'].upper()
     elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
 
-    # connect to the database
-    mydb = MySQLdb.connect(host=config['DATABASE']['host'],
-        user=config['DATABASE']['user'],
-        passwd=config['DATABASE']['passwd'],
-        db=config[state]['db'], 
-        local_infile = 1)
-
+    mydb = util.mysql_connect(state)
     cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
     # run query
@@ -111,12 +101,7 @@ def single_county_stats(county):
     elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
 
     # connect to the database
-    mydb = MySQLdb.connect(host=config['DATABASE']['host'],
-        user=config['DATABASE']['user'],
-        passwd=config['DATABASE']['passwd'],
-        db=config[state]['db'], 
-        local_infile = 1)
-
+    mydb = util.mysql_connect(state)
     cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
     # run query
