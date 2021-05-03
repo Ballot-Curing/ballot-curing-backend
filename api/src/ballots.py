@@ -6,9 +6,9 @@ from flask import jsonify
 from flask import request as req
 from flask import abort
 
+import util
 from schema import schema_col_names
 from config import load_config
-from lib import util
 
 ballots_bp = Blueprint('ballots', __name__)
 
@@ -81,7 +81,8 @@ def perform_query():
     historic = req.args.get('show_historic', False)
 
     try:
-        cur = util.mysql_connect(state)
+        mydb = util.mysql_connect(state)
+        cur = mydb.cursor(MySQLdb.cursors.DictCursor)
     except:
         # if connection failed, then input state was not valid
         abort(500, description="internal service failure")

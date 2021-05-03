@@ -7,10 +7,9 @@ from flask import jsonify
 from flask import request
 from datetime import datetime
 
-from config import load_config
+import queries
 import util
-
-from lib import util, stats_util
+from lib import stats_util
 
 stats_bp = Blueprint('stats',__name__)
 
@@ -26,6 +25,8 @@ def state_stats():
     # connect to the database
     mydb = util.mysql_connect(state)
     cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
+
+    # TODO: query for max proc_date for election, use in where clause to grab latest statistics
 
     # query to get statewide stats
     query = f'''
@@ -87,6 +88,9 @@ def county_stats():
     except:
         abort(400, 'Bad Request')
 
+    mydb = util.mysql_connect(state)
+    cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
+
     # run query
     query = f'''
     SELECT *
@@ -120,6 +124,52 @@ def single_county_stats(county):
     '''
 
     response = stats_util.get_county_data(cursor, query, state, elec_dt)
+    response.headers.add('Access-Control-Allow-Origin', '*')
+
+    return response
+
+@stats_bp.route('time_series/', methods=['GET'])
+def time_series():
+    try:
+        state = request.args['state'].upper()
+        county = request.args.get('county', None)
+        elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y').date()
+    except:
+        abort(400, description = 'Bad Request')
+
+    mydb = util.mysql_connect(state)
+    cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
+        
+    data = {'rejected_totals' : [], 'cured_totals' : [], 'proc_totals' : [],
+            'rejected_unique' : [], 'cured_unique' : [], 'proc_unique' : []}
+
+    try:
+        query = f'''
+        SELECT *
+        FROM state_time_series
+        WHERE election_dt = '{elec_dt}'
+        '''
+
+        cur.execute(query)
+        rows = cur.fetchall()
+
+        for row in rows:
+            proc_date = row['proc_date'].date()
+
+            data['rejected_totals'].append({'proc_date' : proc_date, 'value' : row['rejected']})
+            data['rejected_unique'].append({'proc_date' : proc_date, 'value' : row['unique_rej']})
+
+            data['cured_totals'].append({'proc_date' : proc_date, 'value' : row['cured']})
+            data['cured_unique'].append({'proc_date' : proc_date, 'value' : row['unique_cured']})
+
+            data['proc_totals'].append({'proc_date' : proc_date, 'value' : row['processed']})
+            data['proc_unique'].append({'proc_date' : proc_date, 'value' : row['unique_processed']})
+
+    except:
+        print("Unexpected error:", sys.exc_info())
+        abort(500, description = "Internal Service Failure")
+
+    response = jsonify(data)
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response

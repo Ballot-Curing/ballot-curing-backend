@@ -1,6 +1,7 @@
 import json
-
 from flask import jsonify
+
+import util
 
 def get_county_data(cursor, query, state, elec_dt):
     cursor.execute(query)
@@ -77,13 +78,13 @@ def get_demographics(state, row):
     if (state != "GA"):
         # string parsing to convert gender stats into the right form
         gender_rej = json.loads(row['gender_rej'])
-        ret_dict['gender_rej'] = process_json(gender_rej)
+        ret_dict['gender_rej'] = process_gender_json(gender_rej)
 
         gender_cur = json.loads(row['gender_cured'])
-        ret_dict['gender_cur'] = process_json(gender_cur)
+        ret_dict['gender_cur'] = process_gender_json(gender_cur)
 
         gender_tot = json.loads(row['gender_tot'])
-        ret_dict['gender_tot'] = process_json(gender_tot)
+        ret_dict['gender_tot'] = process_gender_json(gender_tot)
 
         # string parsing to convert race stats into the right form
         race_rej = json.loads(row['race_rej'])
@@ -128,6 +129,20 @@ def process_json(response):
     response = json.loads(response)
     return response
 
+def process_gender_json(response):
+    response = process_json(response)
+    
+    empty_idx = util.find(response, 'gender', '')
+    u_idx = util.find(response, 'gender', 'U')
+
+    if empty_idx is not None:
+        empty_count = int(response[empty_idx]['gender_count'])
+        response[u_idx]['gender_count'] += empty_count
+
+        response.pop(empty_idx)
+
+    return response
+
 def process_age_json(response):
     response = process_json(response)
     ret = []
@@ -145,3 +160,5 @@ def process_race_json(response):
     response = response.replace(', {"race": ""UNDESIGNATED", "race_count": 2}', "") # TODO: Add 2 to the normal undesignated count to account for this
     response = response.replace(', {"race": ""UNDESIGNATED", "race_count": 1}', "")
     return json.loads(response)
+
+
