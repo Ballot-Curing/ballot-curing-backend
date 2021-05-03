@@ -9,7 +9,7 @@ Flask API endpoints are in `api/`.
 State ingest programs, daily querying programs, and ballot statistics programs are in `db/`.
 
 ## Configuration
-The `BALLOT_CURING_PATH` and `PYTHONPATH` environment variables must be set.
+The `BALLOT_CURING_PATH`, `PYTHONPATH`, and `FLASK_APP` environment variables must be set.
 
 ```
 cd ballot-curing-backend/
