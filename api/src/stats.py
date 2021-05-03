@@ -23,11 +23,27 @@ def state_stats():
     mydb = util.mysql_connect(state)
     cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
+    # get the totals for ballot results from the time series table
+    query = f'''
+    SELECT *
+    FROM state_time_series
+    ORDER BY proc_date DESC;
+    '''
+
+    cursor.execute(query)
+
+    row = cursor.fetchone()
+    tot_rej = row['rejected']
+    tot_cured = row['cured']
+    tot_processed = row['processed']
+
+
     # query to get statewide stats
     query = f'''
     SELECT *
     FROM state_stats
-    WHERE election_dt = '{elec_dt.strftime("%y/%m/%d")}';
+    WHERE election_dt = '{elec_dt.strftime("%y/%m/%d")}'
+    ORDER BY proc_date DESC;
     '''
     
     cursor.execute(query)
@@ -36,9 +52,6 @@ def state_stats():
 
     # gets the fields
     election_dt = row['election_dt']
-    tot_rej = row['tot_rejected']
-    tot_cured = row['tot_cured']
-    tot_processed = row['tot_processed']
 
     # string parsing to convert rej_reason into the right form
     rej_reason = json.loads(row['rej_reason'])
