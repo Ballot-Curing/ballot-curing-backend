@@ -103,7 +103,7 @@ def cured_schema_table(table):
     CREATE TABLE IF NOT EXISTS {table} (
       id    INT NOT NULL,
       {schema_col_names_types}
-      rej_dt DATETIME
+      rej_dt DATETIME,
       PRIMARY KEY(voter_reg_id, election_dt, ballot_rtn_status, ballot_issue)
     );
     '''
