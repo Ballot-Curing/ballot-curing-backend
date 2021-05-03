@@ -12,7 +12,7 @@ State ingest programs, daily querying programs, and ballot statistics programs a
 The `BALLOT_CURING_PATH` and `PYTHONPATH` environment variables must be set.
 
 ```
-cd Ballot-Curing-Project/
+cd ballot-curing-backend/
 export BALLOT_CURING_PATH=$PWD
 export PYTHONPATH=$PYTHONPATH:$PWD:$PWD/db/shared
 ```
