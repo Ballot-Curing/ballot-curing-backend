@@ -20,13 +20,13 @@ def get_rejected(table, cured_db):
     AND today.ballot_rtn_status = "R";
     '''
 
-def get_cured(total, rejected):
+def get_cured(all_ballots, rejected):
     return f'''
-    SELECT acc.*
+    SELECT acc.*, rej.proc_date as rej_dt
     FROM {rejected} AS rej
     INNER JOIN ( 
             SELECT *
-            FROM {total}
+            FROM {all_ballots}
             WHERE ballot_rtn_status='A') acc
     ON acc.voter_reg_id = rej.voter_reg_id 
     WHERE rej.ballot_rtn_status='R';
