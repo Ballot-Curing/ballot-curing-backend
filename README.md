@@ -1,7 +1,7 @@
 # Ballot Curing Project - Backend
-Vote-by-Mail team project for EN.601.310 Software for Resilient Communities 
+Ballot Curing team project for EN.601.310 Software for Resilient Communities 
 
-See our website [here](http://www.cnds.jhu.edu/courses/cs310/vote-by-mail/)
+See our website [here](http://www.cnds.jhu.edu/courses/cs310/ballot-curing)
 
 ## Repository Architecture
 Flask API endpoints are in `api/`.
