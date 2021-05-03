@@ -7,9 +7,7 @@ from flask import request
 from datetime import datetime
 
 from config import load_config
-import queries
 import util
-from lib import stats_util
 
 stats_bp = Blueprint('stats',__name__)
 
