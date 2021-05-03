@@ -1,5 +1,4 @@
 import MySQLdb
-
 from flask import Blueprint
 from flask import request
 from flask import jsonify
@@ -7,6 +6,7 @@ from flask import abort
 from datetime import datetime
 
 from config import load_config
+from util import mysql_connect
 
 lastProcessed_bp = Blueprint('lastProcessed', __name__)
 
@@ -25,11 +25,7 @@ def lastProcessed():
 
     # connect to the database
     try:
-        mydb = MySQLdb.connect(host=config['DATABASE']['host'],
-            user=config['DATABASE']['user'],
-            passwd=config['DATABASE']['passwd'],
-            db=config[state]['db'], 
-            local_infile = 1)
+        mydb = mysql_connect(state)
     except:
         abort(500, description="internal service failure")
 

@@ -1,14 +1,14 @@
 import MySQLdb
 import sys
 import json
-
 from flask import Blueprint
 from flask import abort
 from flask import jsonify
 from flask import request
 from datetime import datetime
 
-import queries
+from config import load_config
+import util
 
 from lib import util, stats_util
 
@@ -24,9 +24,8 @@ def state_stats():
         abort(400, description = 'Bad Request')
 
     # connect to the database
-    cursor = util.mysql_connect(state)
-
-    # TODO: query for max proc_date for election, use in where clause to grab latest statistics
+    mydb = util.mysql_connect(state)
+    cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
     # query to get statewide stats
     query = f'''
@@ -82,10 +81,11 @@ def county_stats():
         # get required params
         state = request.args['state'].upper()
         elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
+
+        mydb = util.mysql_connect(state)
+        cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
     except:
         abort(400, 'Bad Request')
-
-    cursor = util.mysql_connect(state)
 
     # run query
     query = f'''
@@ -107,7 +107,8 @@ def single_county_stats(county):
     elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y')
 
     # connect to the database
-    cursor = util.mysql_connect(state)
+    mydb = util.mysql_connect(state)
+    cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
     # run query
     query = f'''
@@ -122,52 +123,4 @@ def single_county_stats(county):
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response
-
-
-@stats_bp.route('time_series/', methods=['GET'])
-def time_series():
-    try:
-        state = request.args['state'].upper()
-        county = request.args.get('county', None)
-        elec_dt = datetime.strptime(request.args['election_dt'], '%m-%d-%Y').date()
-    except:
-        abort(400, description = 'Bad Request')
-
-    cur = util.mysql_connect(state)
-        
-    data = {'rejected_totals' : [], 'cured_totals' : [], 'proc_totals' : [],
-            'rejected_unique' : [], 'cured_unique' : [], 'proc_unique' : []}
-
-    try:
-        query = f'''
-        SELECT *
-        FROM state_time_series
-        WHERE election_dt = '{elec_dt}'
-        '''
-
-        cur.execute(query)
-        rows = cur.fetchall()
-
-        for row in rows:
-            print(row)
-            proc_date = row['proc_date'].date()
-
-            data['rejected_totals'].append({'x' : proc_date, 'y' : row['rejected']})
-            data['rejected_unique'].append({'x' : proc_date, 'y' : row['unique_rej']})
-
-            data['cured_totals'].append({'x' : proc_date, 'y' : row['cured']})
-            data['cured_unique'].append({'x' : proc_date, 'y' : row['unique_cured']})
-
-            data['proc_totals'].append({'x' : proc_date, 'y' : row['processed']})
-            data['proc_unique'].append({'x' : proc_date, 'y' : row['unique_processed']})
-
-    except:
-        print("Unexpected error:", sys.exc_info())
-        abort(500, description = "Internal Service Failure")
-
-    response = jsonify(data)
-    response.headers.add('Access-Control-Allow-Origin', '*')
-
-    return response
-
 
