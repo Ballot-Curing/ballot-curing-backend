@@ -10,15 +10,13 @@ import schema
 from current_data import mysql_connect
 
 class Election:
-
-    def __init__(self, cursor, state, proc_date=None):
+    def __init__(self, cursor, state, proc_date=None, db=None):
         self.cursor = cursor
         self.state = state
-
+        self.db = db
         self.county = None
-
-        if proc_date:
-            self.set_proc_date(proc_date)
+        
+        self.set_proc_date(proc_date)
 
     def set_county(self, county):
         self.county = county
@@ -27,12 +25,30 @@ class Election:
         global proc_date 
         proc_date = proc_dt
 
+    def set_db(self, db):
+        self.db = db
+
     def set_elec_dt(self, elec_dt):
         self.elec_dt = elec_dt
 
         self.elec_str = datetime.strftime(elec_dt, '%m_%d_%Y')
         self.cured_table = f'cured_{self.elec_str}'
         self.rej_table = f'rejected_{self.elec_str}'
+
+    def get_state(self):
+        return self.state
+
+    def get_county(self):
+        return self.county
+
+    def get_proc_date(self):
+        return proc_date
+
+    def get_elec_dt(self):
+        return self.elec_dt
+
+    def get_db(self):
+        return self.db
 
     def get_processed(self):
         self.cursor.execute(get_processed_count(self.elec_str, self.county))
@@ -227,7 +243,7 @@ def get_unique_proc_per_day(election, county=None):
     SELECT
         proc_date,
         COUNT(proc_date) AS count,
-        GREATEST(COUNT(proc_date) - LAG(COUNT(proc_date), 1) OVER (ORDER BY proc_date), 0) AS diff
+        GREATEST(COUNT(proc_date) - LAG(COUNT(proc_date), 1, 0) OVER (ORDER BY proc_date), 0) AS diff
     FROM {table}
     {where_clause}
     GROUP BY proc_date ORDER BY proc_date;

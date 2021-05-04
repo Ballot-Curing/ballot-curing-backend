@@ -95,7 +95,7 @@ def county_stats():
     query = f'''
     SELECT *
     FROM county_stats
-    WHERE election_dt = '{elec_date}'
+    WHERE election_dt = '{elec_dt}'
     ORDER BY proc_date ASC;
     '''
 
@@ -150,8 +150,8 @@ def time_series():
         WHERE election_dt = '{elec_dt}'
         '''
 
-        cur.execute(query)
-        rows = cur.fetchall()
+        cursor.execute(query)
+        rows = cursor.fetchall()
 
         for row in rows:
             proc_date = row['proc_date'].date()

@@ -36,7 +36,7 @@ def mysql_connect(state):
 
 def stats_has_date(cursor, proc_dt, elec_dt, county=None):
     table = 'county_stats' if county else 'state_stats'
-    additional_where = 'AND county = "{county}"' if county else ''
+    additional_where = f'AND county = "{county}"' if county else ''
 
     query = f'''
     SELECT COUNT(*)
@@ -54,13 +54,13 @@ def stats_has_date(cursor, proc_dt, elec_dt, county=None):
 
 def time_series_has_date(cursor, proc_dt, elec_dt, county=None):
     table = 'county_time_series' if county else 'state_time_series'
-    additional_where = 'AND county = "{county}"' if county else ''
+    additional_where = f'AND county = "{county}"' if county else ''
 
     query = f'''
     SELECT COUNT(*)
     FROM {table} 
     WHERE election_dt = '{elec_dt}' AND
-        proc_date = '{proc_dt}'
+        proc_date = '{proc_dt}' 
         {additional_where}
     ;
     '''
