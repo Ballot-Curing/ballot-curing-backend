@@ -96,7 +96,7 @@ def county_stats():
     time_series_query = f'''
     SELECT county, MAX(proc_date), MAX(cured) as cured,
     MAX(processed) as processed, MAX(rejected) as rejected
-    FROM new_county_time_series GROUP BY county;
+    FROM county_time_series GROUP BY county;
     '''
 
     response = get_county_data(cursor, query, time_series_query, state, elec_dt)
@@ -124,7 +124,7 @@ def single_county_stats(county):
     time_series_query = f'''
     SELECT county, MAX(proc_date), MAX(cured) as cured,
     MAX(processed) as processed, MAX(rejected) as rejected
-    FROM new_county_time_series WHERE county = "{county}"
+    FROM county_time_series WHERE county = "{county}"
     GROUP BY county;
     '''
 
