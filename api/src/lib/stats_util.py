@@ -3,6 +3,27 @@ from flask import jsonify
 
 import util
 
+def get_county_name(state, county_string):
+    if (state == 'GA'):
+        # counties in GA with an irregular caps scheme
+        irregular = {
+            'DEKALB' : 'DeKalb',
+            'MCDUFFIE' : 'McDuffie',
+            'MCINTOSH' : 'McIntosh'
+        }
+        if county_string.upper() in irregular:
+            return irregular[county_string.upper()]
+
+    elif (state == 'NC'):
+        # counties in NC with an irregular caps scheme
+        irregular = {
+            'MCDOWELL' : 'McDowell'
+        }
+        if county_string.upper() in irregular:
+            return irregular[county_string.upper()]
+
+    return county_string.title()
+
 def get_county_data(cursor, query, time_query, state, elec_dt):
     cursor.execute(query)
 

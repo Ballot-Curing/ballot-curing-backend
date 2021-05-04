@@ -68,15 +68,10 @@ def compute_time_series(elec):
             cur_tot = cur_ts[cur_idx]['count'] if cur_idx else prev_cur_tot
             cur_uniq = cur_ts[cur_idx]['diff'] if cur_idx else 0
 
-            if (proc_tot < prev_proc_tot and proc_tot < .1 * prev_proc_tot):
-                proc_tot = prev_proc_tot + proc_tot
-
-            if (rej_tot < prev_rej_tot and rej_tot < .1 * prev_rej_tot):
-                ret_tot = prev_ret_tot + rej_tot
-
-            if (cur_tot < prev_cur_tot and cur_tot < .1 * prev_cur_tot):
-                cur_tot = prev_cur_tot + cur_tot
-
+            proc_tot = max(proc_tot, prev_proc_tot)
+            rej_tot = max(rej_tot, prev_rej_tot)
+            cur_tot = max(cur_tot, prev_cur_tot)
+            
             prev_proc_tot = proc_tot
             prev_rej_tot = rej_tot
             prev_cur_tot = cur_tot
@@ -226,11 +221,12 @@ def compute_2021_runoff_election():
     election = '01_05_2021'
     
     proc_date = start_date
-    compute_state_stats('GA', proc_date, election)
+
+    compute_county_stats('GA', proc_date, election) 
     quit()
 
     while proc_date <= end_date:
-        #compute_state_stats('GA', proc_date, election)
+        compute_state_stats('GA', proc_date, election)
         compute_county_stats('GA', proc_date, election) 
         proc_date += timedelta(days=1)
 
