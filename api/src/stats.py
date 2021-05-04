@@ -23,23 +23,30 @@ def state_stats():
     mydb = util.mysql_connect(state)
     cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
-    # query to get statewide stats
+    # get the totals for ballot results from the time series table
     query = f'''
     SELECT *
-    FROM state_stats
-    WHERE election_dt = '{elec_dt.strftime("%y/%m/%d")}';
+    FROM state_time_series
+    ORDER BY proc_date DESC;
     '''
-    
+
     cursor.execute(query)
 
     row = cursor.fetchone()
-
-    # gets the fields
+    tot_rej = row['rejected']
+    tot_cured = row['cured']
+    tot_processed = row['processed']
     election_dt = row['election_dt']
-    tot_rej = row['tot_rejected']
-    tot_cured = row['tot_cured']
-    tot_processed = row['tot_processed']
 
+    # query to get statewide stats for demographics
+    query = f'''
+    SELECT *
+    FROM state_stats
+    ORDER BY proc_date DESC;
+    '''
+    
+    cursor.execute(query)
+    row = cursor.fetchone()
     # string parsing to convert rej_reason into the right form
     rej_reason = json.loads(row['rej_reason'])
     rej_reason = process_json(rej_reason) 
@@ -83,11 +90,16 @@ def county_stats():
     # run query
     query = f'''
     SELECT *
-    FROM county_stats
-    WHERE election_dt = '{elec_dt.strftime("%y/%m/%d")}';
+    FROM county_stats;
     '''
 
-    response = get_county_data(cursor, query, state, elec_dt)
+    time_series_query = f'''
+    SELECT county, MAX(proc_date), MAX(cured) as cured,
+    MAX(processed) as processed, MAX(rejected) as rejected
+    FROM new_county_time_series GROUP BY county;
+    '''
+
+    response = get_county_data(cursor, query, time_series_query, state, elec_dt)
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response
@@ -106,16 +118,22 @@ def single_county_stats(county):
     query = f'''
     SELECT *
     FROM county_stats
-    WHERE (election_dt = '{elec_dt.strftime("%y/%m/%d")}'
-    AND county = "{county}");
+    WHERE county = "{county}";
     '''
 
-    response = get_county_data(cursor, query, state, elec_dt)
+    time_series_query = f'''
+    SELECT county, MAX(proc_date), MAX(cured) as cured,
+    MAX(processed) as processed, MAX(rejected) as rejected
+    FROM new_county_time_series WHERE county = "{county}"
+    GROUP BY county;
+    '''
+
+    response = get_county_data(cursor, query, time_series_query, state, elec_dt)
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response
 
-def get_county_data(cursor, query, state, elec_dt):
+def get_county_data(cursor, query, time_query, state, elec_dt):
     cursor.execute(query)
 
     rows = cursor.fetchall()
@@ -133,34 +151,41 @@ def get_county_data(cursor, query, state, elec_dt):
     rejected_age_group = []
     cured_age_group = []
     total_age_group = []
-    ballot_issue_count = []
 
-    # parse each counties data
-    for row in rows:   
-        # string parsing to convert rej_reason into the right form
-        rej_reason = json.loads(row['rej_reason'])
-        rej_reason = process_json(rej_reason) 
+    if state == 'GA':
+        # Georgia queries from time series table because it does not support the general demographic information       
+        cursor.execute(time_query)
+        rows = cursor.fetchall()
 
-        # get demographic stats
-        demo_stats = get_demographics(state, row) 
+        for row in rows:
+            county_name = get_county_name(state, row['county'])
+            total_rejected.append({"name" : county_name, "value" : row['rejected']})
+            total_cured.append({"name" : county_name, "value" : row['cured']})
+            total_processed.append({"name" : county_name, "value" : row['processed']})
+    else:        
+        # parse each counties data
+        for row in rows:   
+            # string parsing to convert rej_reason into the right form
+            rej_reason = json.loads(row['rej_reason'])
+            rej_reason = process_json(rej_reason) 
 
-        # add the data to each list
-        county_name = get_county_name(state, row['county'])
-        total_rejected.append({"name" : county_name, "value" : row['tot_rejected']})
-        total_cured.append({"name" : county_name, "value" : row['tot_cured']})
-        total_processed.append({"name" : county_name, "value" : row['tot_processed']})
-        rejected_gender.append({"name" : county_name, "value" : demo_stats['gender_rej']})
-        cured_gender.append({"name" : county_name, "value" : demo_stats['gender_cur']})
-        total_gender.append({"name" : county_name, "value" : demo_stats['gender_tot']})
-        rejected_race.append({"name" : county_name, "value" : demo_stats['race_rej']})
-        cured_race.append({"name" : county_name, "value" : demo_stats['race_cur']})
-        total_race.append({"name" : county_name, "value" : demo_stats['race_tot']})
-        rejected_age_group.append({"name" : county_name, "value" : demo_stats['age_rej']})
-        cured_age_group.append({"name" : county_name, "value" : demo_stats['age_cur']})
-        total_age_group.append({"name" : county_name, "value" : demo_stats['age_tot']})
-        ballot_issue_count.append({"name" : county_name, "value" : rej_reason})
+            # get demographic stats
+            demo_stats = get_demographics(state, row) 
 
-
+            county_name = get_county_name(state, row['county'])
+            total_rejected.append({"name" : county_name, "value" : row['tot_rejected']})
+            total_cured.append({"name" : county_name, "value" : row['tot_cured']})
+            total_processed.append({"name" : county_name, "value" : row['tot_processed']})
+            rejected_gender.append({"name" : county_name, "value" : demo_stats['gender_rej']})
+            cured_gender.append({"name" : county_name, "value" : demo_stats['gender_cur']})
+            total_gender.append({"name" : county_name, "value" : demo_stats['gender_tot']})
+            rejected_race.append({"name" : county_name, "value" : demo_stats['race_rej']})
+            cured_race.append({"name" : county_name, "value" : demo_stats['race_cur']})
+            total_race.append({"name" : county_name, "value" : demo_stats['race_tot']})
+            rejected_age_group.append({"name" : county_name, "value" : demo_stats['age_rej']})
+            cured_age_group.append({"name" : county_name, "value" : demo_stats['age_cur']})
+            total_age_group.append({"name" : county_name, "value" : demo_stats['age_tot']})
+    
     # build final output
     ret_dict = {
         "state" : state,
@@ -177,7 +202,6 @@ def get_county_data(cursor, query, state, elec_dt):
         "rejected_age_group" : rejected_age_group,
         "cured_age_group" : cured_age_group,
         "processed_age_group" : total_age_group,
-        "ballot_issue_count" : ballot_issue_count
     }
 
     return jsonify(ret_dict)
