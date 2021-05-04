@@ -15,11 +15,7 @@ conda activate proj3
 
 #### 2. Configuration
 A `config.ini` should be set up following the structure in `config-sample.ini`.
-
-The FLASK_APP environment variable needs to be set:
-```
-export FLASK_APP=$PWD/src/app.py
-```
+`FLASK_APP` should be set as well.
 
 #### 3. Running
 Running development server:

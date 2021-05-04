@@ -13,12 +13,13 @@ State ingest programs, daily querying programs, and ballot statistics programs a
 Quick-start: `source exports.sh`
 
 If you would like to manually set things up:
-The `BALLOT_CURING_PATH` and `PYTHONPATH` environment variables must be set.
+The `BALLOT_CURING_PATH`, `PYTHONPATH`, and `FLASK_APP` environment variables must be set.
 
 ```
-cd Ballot-Curing-Project/
+cd ballot-curing-backend/
 export BALLOT_CURING_PATH=$PWD
 export PYTHONPATH=$PYTHONPATH:$PWD:$PWD/db/shared
+export FLASK_APP=$PWD/api/src/app.py
 ```
 
 Set up variables for state configurations in `config.ini`. A sample configuration is provided.

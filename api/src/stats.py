@@ -26,16 +26,13 @@ def state_stats():
     mydb = util.mysql_connect(state)
     cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
-    # TODO: query for max proc_date for election, use in where clause to grab latest statistics
-
-    # query to get statewide stats
+    # get the totals for ballot results from the time series table
     query = f'''
     SELECT *
-    FROM state_stats
-    WHERE election_dt = '{elec_dt}'
-    ORDER BY proc_date ASC;
+    FROM state_time_series
+    ORDER BY proc_date DESC;
     '''
-    
+
     cursor.execute(query)
 
     row = cursor.fetchone()
@@ -44,6 +41,20 @@ def state_stats():
         print(query)
         abort(404, description = 'Not Found')
 
+    tot_rej = row['rejected']
+    tot_cured = row['cured']
+    tot_processed = row['processed']
+    election_dt = row['election_dt']
+
+    # query to get statewide stats for demographics
+    query = f'''
+    SELECT *
+    FROM state_stats
+    ORDER BY proc_date DESC;
+    '''
+    
+    cursor.execute(query)
+    row = cursor.fetchone()
     # string parsing to convert rej_reason into the right form
     rej_reason = json.loads(row['rej_reason'])
     rej_reason = stats_util.process_json(rej_reason) 
@@ -94,12 +105,16 @@ def county_stats():
     # run query
     query = f'''
     SELECT *
-    FROM county_stats
-    WHERE election_dt = '{elec_dt}'
-    ORDER BY proc_date ASC;
+    FROM county_stats;
     '''
 
-    response = stats_util.get_county_data(cursor, query, state, elec_dt)
+    time_series_query = f'''
+    SELECT county, MAX(proc_date), MAX(cured) as cured,
+    MAX(processed) as processed, MAX(rejected) as rejected
+    FROM new_county_time_series GROUP BY county;
+    '''
+
+    response = stats_util.get_county_data(cursor, query, time_series_query, state, elec_dt)
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response
@@ -118,12 +133,17 @@ def single_county_stats(county):
     query = f'''
     SELECT *
     FROM county_stats
-    WHERE (election_dt = '{elec_dt}'
-    AND county = "{county}"
-    ORDER BY proc_date ASC);
+    WHERE county = "{county}";
     '''
 
-    response = stats_util.get_county_data(cursor, query, state, elec_dt)
+    time_series_query = f'''
+    SELECT county, MAX(proc_date), MAX(cured) as cured,
+    MAX(processed) as processed, MAX(rejected) as rejected
+    FROM new_county_time_series WHERE county = "{county}"
+    GROUP BY county;
+    '''
+
+    response = stats_util.get_county_data(cursor, query, time_series_query, state, elec_dt)
     response.headers.add('Access-Control-Allow-Origin', '*')
 
     return response
