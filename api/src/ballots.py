@@ -82,12 +82,13 @@ def perform_query():
 
     try:
         mydb = util.mysql_connect(state)
-        cur = mydb.cursor(MySQLdb.cursors.DictCursor)
+        cur = mydb.cursor()
     except:
         # if connection failed, then input state was not valid
         abort(500, description="internal service failure")
 
-    db_table_name = elec_dt.strftime('%m_%d_%Y')
+    election = elec_dt.strftime('%m_%d_%Y')
+    db_table_name = f'rejected_{election}'
 
     query = f'''
     SELECT *
