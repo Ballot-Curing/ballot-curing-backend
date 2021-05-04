@@ -31,7 +31,11 @@ def lastProcessed():
 
     # run query to get processed date for that election
     cursor = mydb.cursor()
-    query = " SELECT proc_date FROM elections WHERE election_dt = '" + election_dt.strftime("%y/%m/%d") + "'; "
+    query = f''' 
+    SELECT proc_date 
+    FROM elections 
+    WHERE election_dt = '{election_dt}';
+    '''
     print("debug: " + query)
     try:
         cursor.execute(query)

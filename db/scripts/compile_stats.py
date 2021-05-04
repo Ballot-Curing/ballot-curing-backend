@@ -1,195 +1,249 @@
 import MySQLdb
+import os
 import sys
 import json
-import logging, logging.config
-
+import itertools
 from datetime import datetime, timedelta, date
 from time import time
 
 import schema
 import queries
+import current_data as data
+from config import load_logger
+from util import find, safe_min_max
 
-from current_data import cur_states as states, get_elections
-from config import load_config
+logger = load_logger()
 
-config = load_config()
+def compute_time_series(elec):
+    state = elec.get_state() 
+    proc_date = elec.get_proc_date()
+    elec_dt = elec.get_elec_dt()
+    county = elec.get_county()
+    mydb = elec.get_db()
 
-logging.config.fileConfig(fname='log_config.ini')
-
-logger = logging.getLogger('dev')
-
-'''
-State-level statistics
-'''
-for state in states:
-    mydb = MySQLdb.connect(
-        host=config['DATABASE']['host'],
-        user=config['DATABASE']['user'],
-        passwd=config['DATABASE']['passwd'],
-        db=config[state]['db'],
-        local_infile=1)
- 
     cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
-    cursor.execute(schema.create_state_stats_table())
+    cursor.execute(schema.create_state_time_series_table())
+    cursor.execute(schema.create_county_time_series_table())
     
-    elections = get_elections(cursor)
-  
-    for election in elections:
-        logger.info(f'Computing {state} state-level statistics for {election}.')
-        t0 = time()
+    t0 = time()
+
+    if not data.time_series_has_date(cursor, proc_date, elec_dt, county):
+        # empty list for county temp for time-saving, don't really need proc for counties
+        proc_ts = elec.get_unique_processed()
+        rej_ts = elec.get_unique_rej()
+        cur_ts = elec.get_unique_cured()
+
+        logger.debug(f'Time series queries retrieved from db @ {time() - t0:.2f}s')
+
+        proc_ts_begin = safe_min_max(min, [row['proc_date'] for row in proc_ts])
+        proc_ts_end = safe_min_max(max, [row['proc_date'] for row in proc_ts]) 
+    
+        rej_ts_begin = safe_min_max(min, [row['proc_date'] for row in rej_ts]) 
+        rej_ts_end = safe_min_max(max, [row['proc_date'] for row in rej_ts]) 
+    
+        cur_ts_begin = safe_min_max(min, [row['proc_date'] for row in cur_ts]) 
+        cur_ts_end = safe_min_max(max, [row['proc_date'] for row in cur_ts]) 
+    
+        proc_date_start = safe_min_max(min, [proc_ts_begin, rej_ts_begin, cur_ts_begin])
+        proc_date_end = safe_min_max(max, [proc_ts_end, rej_ts_end, cur_ts_end])
+
+        prev_proc_tot = 0
+        prev_rej_tot = 0
+        prev_cur_tot = 0
         
-        cured_table = f'cured_{election}'
-        rej_table = f'rejected_{election}'
-
-        cursor.execute(queries.get_processed_count(election))
-        processed_tot = cursor.fetchall()[0]['num_processed']
-
-        cursor.execute(queries.get_cured_count(election))
-        cured_tot = cursor.fetchall()[0]['num_cured']
-
-        cursor.execute(queries.get_rej_count(election))
-        rej_tot = cursor.fetchall()[0]['num_rejected']
-
-        logger.debug(f'proc, cured, rej done @ {time() - t0:.2f}s')
-
-        cursor.execute(queries.get_rej_reasons(election))
-        rej_reasons = json.dumps(str(cursor.fetchall()))
-
-        logger.debug(f'reasons done @ {time() - t0:.2f}s')
-
-        cursor.execute(queries.get_gender_count(election))
-        gender_tot = json.dumps(str(cursor.fetchall()))
-
-        cursor.execute(queries.get_gender_count(cured_table))
-        gender_cured = json.dumps(str(cursor.fetchall()))
-
-        cursor.execute(queries.get_gender_count(rej_table))
-        gender_rej = json.dumps(str(cursor.fetchall()))
-
-        logger.debug(f'gender done @ {time() - t0:.2f}s')
-
-        cursor.execute(queries.get_race_count(election))
-        race_tot = json.dumps(str(cursor.fetchall()))
-
-        cursor.execute(queries.get_race_count(cured_table))
-        race_cured = json.dumps(str(cursor.fetchall()))
-
-        cursor.execute(queries.get_race_count(rej_table))
-        race_rej = json.dumps(str(cursor.fetchall()))
-
-        logger.debug(f'race done @ {time() - t0:.2f}s')
+        proc_date_cur = proc_date_start
         
-        cursor.execute(queries.get_age_count(election))
-        age_tot = json.dumps(str(cursor.fetchall()))
+        while proc_date_cur and proc_date_cur <= proc_date_end:
+            proc_idx = find(proc_ts, 'proc_date', proc_date_cur)
+            rej_idx = find(rej_ts, 'proc_date', proc_date_cur)
+            cur_idx = find(cur_ts, 'proc_date', proc_date_cur)
 
-        cursor.execute(queries.get_age_count(cured_table))
-        age_cured = json.dumps(str(cursor.fetchall()))
+            proc_tot = proc_ts[proc_idx]['count'] if proc_idx else prev_proc_tot
+            proc_uniq = proc_ts[proc_idx]['diff'] if proc_idx else 0 
 
-        cursor.execute(queries.get_age_count(rej_table))
-        age_rej = json.dumps(str(cursor.fetchall()))
+            rej_tot = rej_ts[rej_idx]['count'] if rej_idx else prev_rej_tot 
+            rej_uniq = rej_ts[rej_idx]['diff'] if rej_idx else 0
 
-        logger.debug(f'age done @ {time() - t0:.2f}s')
-        
-        # add entry in state_stats
-        proc_date = date.today()
-        election_dt = datetime.strptime(election, '%m_%d_%Y')
+            cur_tot = cur_ts[cur_idx]['count'] if cur_idx else prev_cur_tot
+            cur_uniq = cur_ts[cur_idx]['diff'] if cur_idx else 0
 
-        query = schema.add_state_stat()
-        cursor.execute(query, (proc_date, election_dt, 
-            processed_tot, cured_tot, rej_tot,
-            rej_reasons, 
-            gender_tot, gender_cured, gender_rej, 
-            race_tot, race_cured, race_rej, 
-            age_tot, age_cured, age_rej))
+            proc_tot = max(proc_tot, prev_proc_tot)
+            rej_tot = max(rej_tot, prev_rej_tot)
+            cur_tot = max(cur_tot, prev_cur_tot)
+            
+            prev_proc_tot = proc_tot
+            prev_rej_tot = rej_tot
+            prev_cur_tot = cur_tot
+
+            query = schema.insert_time_series(county)
+            cursor.execute(query, (proc_date_cur, elec_dt,
+                proc_tot, proc_uniq,
+                rej_tot, rej_uniq,
+                cur_tot, cur_uniq))
+
+            proc_date_cur += timedelta(days=1)
 
         mydb.commit()
-        logger.debug(f'Total time for {state} state-level statistics: {time() - t0:.2f}s')
+    
+    logger.debug(f'Time series data entry finished @ {time() - t0:.2f}s')
+
+def compute_state_stats(state, proc_date, election):
+    '''
+    State-level statistics
+    
+    proc_date : datetime
+        The date to process stats up until
+    '''
+    mydb = data.mysql_connect(state)
+    cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
+    cursor.execute(schema.create_state_stats_table())
+    
+    elections = data.active_elections[state]
+
+    elec = queries.Election(cursor, state, proc_date, mydb) 
+
+    elec_dt = datetime.strptime(election, '%m_%d_%Y')
+    elec.set_elec_dt(elec_dt)
+    
+    logger.info(f'Computing {state} state-level statistics for {election} on {proc_date}.')
+    t0 = time()
+    
+    compute_time_series(elec)
+    
+    # TODO: remove proc rej cured here for future
+    if state != 'GA' and not data.stats_has_date(cursor, proc_date, elec_dt):
+        processed_tot = elec.get_processed()
+        cured_tot = elec.get_cured()
+        rej_tot = elec.get_rejected()
+        logger.debug(f'proc, cured, rej done @ {time() - t0:.2f}s')
+
+        rej_reasons = elec.get_rej_reasons()
+        logger.debug(f'reasons done @ {time() - t0:.2f}s')
+
+        gender = elec.get_gender_counts()
+        logger.debug(f'gender done @ {time() - t0:.2f}s')
+
+        race = elec.get_race_counts()
+        logger.debug(f'race done @ {time() - t0:.2f}s')
+        
+        age = elec.get_age_counts()
+        logger.debug(f'age done @ {time() - t0:.2f}s')
+
+        query = schema.insert_stat()
+        cursor.execute(query, (proc_date, elec_dt, 
+            processed_tot, cured_tot, rej_tot,
+            rej_reasons, 
+            gender['total'], gender['cured'], gender['rejected'], 
+            race['total'], race['cured'], race['rejected'], 
+            age['total'], age['cured'], age['rejected']))
+
+        mydb.commit()
+
+    logger.debug(f'Total time for {state} state-level statistics: {time() - t0:.2f}s')
 
     mydb.close()
 
-'''
-County-level statistics
-'''
-for state in states:
-    mydb = MySQLdb.connect(
-        host=config['DATABASE']['host'],
-        user=config['DATABASE']['user'],
-        passwd=config['DATABASE']['passwd'],
-        db=config[state]['db'],
-        local_infile=1)
- 
-    cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
 
+def compute_county_stats(state, proc_date, election):
+    '''
+    County-level statistics
+
+    proc_date : datetime
+        The date to process stats up until
+    '''
+    mydb = data.mysql_connect(state)
+    cursor = mydb.cursor(MySQLdb.cursors.DictCursor)
     cursor.execute(schema.create_county_stats_table())
 
+    elections = data.active_elections[state] 
     cursor.execute(queries.get_counties())
     counties = cursor.fetchall()
 
-    elections = get_elections(cursor)
-  
-    for election in elections:
-        logger.info(f'Computing {state} county-level statistics for {election}.')
-        t0 = time()
+    elec = queries.Election(cursor, state, proc_date, mydb)
+    
+    elec_dt = datetime.strptime(election, '%m_%d_%Y')
+    elec.set_elec_dt(elec_dt)
 
-        cured_table = f'cured_{election}'
-        rej_table = f'rejected_{election}'
+    logger.info(f'Computing {state} county-level statistics for {election} on {proc_date}.')
+    t0 = time()
+        
+    done = 0
+    for entry in counties:
+        county = entry['county']
+        elec.set_county(county)
 
-        for entry in counties:
-            county = entry['county']
+        logger.debug(f'{state} county {county}, #{done + 1} / {len(counties)}')
 
-            cursor.execute(queries.get_processed_count(election, county))
-            processed_tot = cursor.fetchall()[0]['num_processed']
+        compute_time_series(elec)
 
-            cursor.execute(queries.get_cured_count(election, county))
-            cured_tot = cursor.fetchall()[0]['num_cured']
+        #TODO: Remove proc, cur, rej from here stats tables (?). Then can re-run daily. Commented out for time-saving purposes
+        '''
+        if not data.stats_has_date(cursor, proc_date, elec_dt, county):
+            processed_tot = elec.get_processed()
+            cured_tot = elec.get_cured()
+            rej_tot = elec.get_rejected()
+            logger.debug(f'proc, cured, rej done @ {time() - t0:.2f}s')
 
-            cursor.execute(queries.get_rej_count(election, county))
-            rej_tot = cursor.fetchall()[0]['num_rejected']
+            rej_reasons = elec.get_rej_reasons()
+            logger.debug(f'reasons done @ {time() - t0:.2f}s')
 
-            cursor.execute(queries.get_rej_reasons(rej_table, county))
-            reasons = json.dumps(str(cursor.fetchall()))
+            gender = elec.get_gender_counts()
+            logger.debug(f'gender done @ {time() - t0:.2f}s')
 
-            cursor.execute(queries.get_gender_count(election, county))
-            gender_tot = json.dumps(str(cursor.fetchall()))
+            race = elec.get_race_counts()
+            logger.debug(f'race done @ {time() - t0:.2f}s')
+            
+            age = elec.get_age_counts()
+            logger.debug(f'age done @ {time() - t0:.2f}s')
 
-            cursor.execute(queries.get_gender_count(cured_table, county))
-            gender_cured = json.dumps(str(cursor.fetchall()))
-
-            cursor.execute(queries.get_gender_count(rej_table, county))
-            gender_rej = json.dumps(str(cursor.fetchall()))
-
-            cursor.execute(queries.get_race_count(election, county))
-            race_tot = json.dumps(str(cursor.fetchall()))
-
-            cursor.execute(queries.get_race_count(cured_table, county))
-            race_cured = json.dumps(str(cursor.fetchall()))
-
-            cursor.execute(queries.get_race_count(rej_table, county))
-            race_rej = json.dumps(str(cursor.fetchall()))
-
-            cursor.execute(queries.get_age_count(election, county))
-            age_tot = json.dumps(str(cursor.fetchall()))
-
-            cursor.execute(queries.get_age_count(cured_table, county))
-            age_cured = json.dumps(str(cursor.fetchall()))
-
-            cursor.execute(queries.get_age_count(rej_table, county))
-            age_rej = json.dumps(str(cursor.fetchall()))
-
-            proc_date = date.today()
-            election_dt = datetime.strptime(election, '%m_%d_%Y') 
-
-            query = schema.add_county_stat()
-            cursor.execute(query, (county, proc_date, election_dt, 
+            query = schema.insert_stat(county)
+            cursor.execute(query, (proc_date, elec_dt, 
                 processed_tot, cured_tot, rej_tot,
                 rej_reasons, 
-                gender_tot, gender_cured, gender_rej, 
-                race_tot, race_cured, race_rej, 
-                age_tot, age_cured, age_rej))
-          
-        mydb.commit()
-        logger.debug(f'Total time for county-level statistics: {time() - t0:.2f}s')
+                gender['total'], gender['cured'], gender['rejected'],
+                race['total'], race['cured'], race['rejected'], 
+                age['total'], age['cured'], age['rejected']))
+
+            mydb.commit()
+        '''
+
+        done += 1
+
+    logger.debug(f'Total time for county-level statistics: {time() - t0:.2f}s')
 
     mydb.close()
 
+def compute_2021_runoff_election():
+    start_date = datetime.strptime('2020-11-29', '%Y-%m-%d').date()
+    end_date = datetime.strptime('2021-01-23', '%Y-%m-%d').date()
+
+    election = '01_05_2021'
+    
+    proc_date = start_date
+
+    compute_county_stats('GA', proc_date, election) 
+    quit()
+
+    while proc_date <= end_date:
+        compute_state_stats('GA', proc_date, election)
+        compute_county_stats('GA', proc_date, election) 
+        proc_date += timedelta(days=1)
+
+if __name__ == '__main__':
+    start_time = time()
+
+    compute_2021_runoff_election()
+    '''
+    # for use while in a real election
+    proc_date = datetime.today().date()
+    compute_state_stats(proc_date)
+    compute_county_stats(proc_date)
+    '''
+    '''
+    proc_date = datetime.strptime('2021-04-17', '%Y-%m-%d').date()
+    compute_state_stats('NC', proc_date)
+    compute_county_stats('NC', proc_date)
+    '''
+    
+    print(f'Total time taken: {time() - start_time:.2f}s')
