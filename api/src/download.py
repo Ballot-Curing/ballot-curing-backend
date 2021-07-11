@@ -68,6 +68,7 @@ def download():
                         writer.writerow(mod_row)
 
                 zip_file.write(f"./output/volunteer{i+1}.csv")
+                os.remove(f"./output/volunteer{i+1}.csv")
 
             with open(f"./output/volunteer{num_vol}.csv", 'w', newline = '') as file:
                 writer = csv.writer(file)
@@ -83,6 +84,7 @@ def download():
                     writer.writerow(mod_row)
 
             zip_file.write(f"./output/volunteer{num_vol}.csv")  
+            os.remove(f"./output/volunteer{num_vol}.csv")
             
         file_response = send_file(f"./output/{filename}", mimetype = file_type,
             attachment_filename = f"vote_{req.args['state'].upper()}_{datetime.now().strftime('%m_%d_%Y')}.zip", as_attachment=True) 
