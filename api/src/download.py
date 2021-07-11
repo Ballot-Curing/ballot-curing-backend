@@ -40,26 +40,49 @@ def download():
     filename = None
     file_type = None
     if ('vol_count' in req.args):
+        num_vol = int(req.args['vol_count'])
+
         file_type = 'application/zip'
         # update to add functionality
         filename = f"vote_{datetime.now().strftime('%d_%m_%y_%H_%M_%S')}.zip"
+
+        rows = cur.fetchall()
+        num_voters = len(rows)
+
+        num_voters_per_vol = int(num_voters / num_vol)
+
         with ZipFile(f"./output/{filename}", 'w') as zip_file:
             
-            with open(f"./output/{filename}_vol1", 'w', newline = '') as file:
+            for i in range(num_vol - 1):
+                with open(f"./output/volunteer{i+1}.csv", 'w', newline = '') as file:
+                    writer = csv.writer(file)
+                    writer.writerow(row_headers) # write the row headers
+                    for j in range(i * num_voters_per_vol, (i + 1) * num_voters_per_vol):
+                        # deletes id from row then writes it to the csv
+                        mod_row = list(rows[j])
+                        mod_row.pop(id_idx)
+                        
+                        for idx in date_idxs:
+                            if mod_row[idx]:
+                                mod_row[idx] = datetime.strftime(mod_row[idx], '%m-%d-%Y') 
+                        writer.writerow(mod_row)
+
+                zip_file.write(f"./output/volunteer{i+1}.csv")
+
+            with open(f"./output/volunteer{num_vol}.csv", 'w', newline = '') as file:
                 writer = csv.writer(file)
                 writer.writerow(row_headers) # write the row headers
-                rows = cur.fetchall()
-                for row in rows:
+                for j in range((num_vol - 1) * num_voters_per_vol, num_voters):
                     # deletes id from row then writes it to the csv
-                    mod_row = list(row)
+                    mod_row = list(rows[j])
                     mod_row.pop(id_idx)
-                    
+                        
                     for idx in date_idxs:
                         if mod_row[idx]:
                             mod_row[idx] = datetime.strftime(mod_row[idx], '%m-%d-%Y') 
                     writer.writerow(mod_row)
 
-            zip_file.write(f"./output/{filename}_vol1")    
+            zip_file.write(f"./output/volunteer{num_vol}.csv")  
             
         file_response = send_file(f"./output/{filename}", mimetype = file_type,
             attachment_filename = f"vote_{req.args['state'].upper()}_{datetime.now().strftime('%m_%d_%Y')}.zip", as_attachment=True) 
