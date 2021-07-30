@@ -82,7 +82,7 @@ def perform_query():
 
     try:
         mydb = util.mysql_connect(state)
-        cur = mydb.cursor()
+        cur = mydb.cursor(MySQLdb.cursors.DictCursor)
     except:
         # if connection failed, then input state was not valid
         abort(500, description="internal service failure")

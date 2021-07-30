@@ -1,6 +1,7 @@
 import MySQLdb
 import csv
 import os
+import operator
 
 from flask import Blueprint
 from flask import request as req
@@ -43,7 +44,7 @@ def download():
         num_vol = int(req.args['vol_count'])
 
         file_type = 'application/zip'
-        # update to add functionality
+
         filename = f"vote_{datetime.now().strftime('%d_%m_%y_%H_%M_%S')}.zip"
 
         rows = cur.fetchall()
@@ -88,6 +89,12 @@ def download():
             
         file_response = send_file(f"./output/{filename}", mimetype = file_type,
             attachment_filename = f"vote_{req.args['state'].upper()}_{datetime.now().strftime('%m_%d_%Y')}.zip", as_attachment=True) 
+    elif ('group_by' in req.args):
+        filename = group_by(row_headers, cur, id_idx, date_idxs)
+        file_type = 'application/zip'
+
+        file_response = send_file(f"./output/{filename}", mimetype = file_type,
+            attachment_filename = f"vote_{req.args['state'].upper()}_{datetime.now().strftime('%m_%d_%Y')}.zip", as_attachment=True)
     else:
         file_type = 'text/csv'
         filename = f"vote_{datetime.now().strftime('%d_%m_%y_%H_%M_%S')}.csv"
@@ -119,3 +126,43 @@ def download():
         return response
 
     return file_response
+
+def group_by(row_headers, cur, id_idx, date_idxs):
+    filename = f"vote_{datetime.now().strftime('%d_%m_%y_%H_%M_%S')}.zip"
+
+    group_by = req.args['group_by']
+
+    file_dict = {}
+
+    rows = cur.fetchall()
+
+    rows = sorted(rows, key=operator.itemgetter(group_by))
+
+    with ZipFile(f"./output/{filename}", 'w') as zip_file:
+        last_field = rows[0][group_by]
+        file = open(f"./output/{last_field}.csv", 'w', newline = '')
+        writer = csv.writer(file)
+        for row in rows:
+            if row[group_by] != last_field:
+                # write old file
+                zip_file.write(f"./output/{last_field}.csv")
+                os.remove(f"./output/{last_field}.csv")
+
+                #create new file
+                last_field = row[group_by]
+                file = open(f"./output/{last_field}.csv", 'w', newline = '')
+                writer = csv.writer(file)
+
+            mod_row = list(row)
+            mod_row.pop(id_idx)
+                
+            #for idx in date_idxs:
+                #if mod_row[idx]:
+                    #mod_row[idx] = datetime.strftime(mod_row[idx], '%m-%d-%Y') 
+            writer.writerow(mod_row)
+
+        zip_file.write(f"./output/{last_field}.csv")
+        os.remove(f"./output/{last_field}.csv")
+
+
+    return filename
